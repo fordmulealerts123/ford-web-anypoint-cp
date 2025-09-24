@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Object Store Usage Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet"/>
+  <!-- Font Awesome for Back Icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-m1jnqTxk8Jo8QYDCBhMfRQFOfFTHeEKRlsU6k4XUvw50JcZjo+yFeZG7uRj1F1Rx8E1zZEkHIK5A4gtmmpT9Yg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    body {
+      font-family: 'Oswald', sans-serif;
+      background-color: #1CBADE;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    button, select, input[type="month"] {
+      font-family: Oswald;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: white;
+      color: #1B216B;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      background-color: #4553a9;
+      color: white;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    select, input[type="month"] {
+      background-color: white;
+      color: #1B216B;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #f4f4f4;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #1B216B;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #e9e9e9;
+    }
+
+    tr:hover {
+      background-color: #d3e1ff;
+    }
+
+    .details {
+      display: none;
+      background: #f9f9f9;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .button-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .back-button {
+      background-color: white;
+      color: #1B216B;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-button i {
+      color: #1B216B;
+    }
+
+    .back-button:hover {
+      background-color: #4553a9;
+      color: white;
+    }
+
+    .back-button:hover i {
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      button, select, input[type="month"] {
+        width: 90%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Object Store Usage Report</h1>
+  <div class="button-container">
+        
+    <button class="back-button" onclick="window.location.href='../INDEX/ACCESS-TOOLS.HTML'">
+        <i class="fa-solid fa-chevron-left"></i> BACK
+    </button>
+</div>
+
+  <div class="container">
+    <div class="controls">
+      <select id="reportType">
+        <option value="business_group_usage">Business Group Usage</option>
+        <option value="environment_usage">Environment Usage</option>
+      </select>
+
+      <input type="month" id="startDate" />
+
+      <button onclick="loadDetails()">LOAD DETAILS</button>
+      <button onclick="showReport()" id="loadReportBtn" disabled>LOAD REPORT</button>
+      <button onclick="resetFilters()" id="resetBtn" disabled>RESET</button>
+
+      <select id="orgDropdown" disabled>
+        <option value="">Select Org Name</option>
+      </select>
+      <select id="monthDropdown" disabled>
+        <option value="">Select Month</option>
+      </select>
+    </div>
+
+    <table>
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script>
+    let rawData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const pageSize = 10;
+
+    window.onload = () => {
+      const today = new Date();
+      document.getElementById("startDate").value = today.toISOString().slice(0, 7);
+    };
+
+    function loadDetails() {
+      const reportType = document.getElementById("reportType").value;
+      const startDateInput = document.getElementById("startDate").value;
+
+      if (!startDateInput) {
+        alert("Please select a start date.");
+        return;
+      }
+
+      const startDate = `${startDateInput}-01`;
+      //const endpoint = `http://mule-admin-api-devv.us-e2.cloudhub.io/api/platform-metrics/object_store-V2/${reportType}?startDate=${startDate}`;
+      const endpoint = `http://localhost:8081/api/platform-metrics/object_store-V2/${reportType}?startDate=${startDate}`;
+
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          rawData = data;
+          populateDropdowns(data, reportType);
+          document.getElementById("loadReportBtn").disabled = false;
+          document.getElementById("resetBtn").disabled = false;
+          document.getElementById("orgDropdown").disabled = false;
+          document.getElementById("monthDropdown").disabled = false;
+          alert("Details Loaded");
+        })
+        .catch(err => {
+          alert("Failed to load data");
+          console.error(err);
+        });
+    }
+
+    function populateDropdowns(data, reportType) {
+      const orgSet = new Set();
+      const monthSet = new Set();
+
+      if (reportType === "business_group_usage") {
+        data.forEach(org => {
+          orgSet.add(org.orgName);
+          org["objectStore-stats"].forEach(stat => {
+            const month = new Date(stat.timeStamp).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            monthSet.add(month);
+          });
+        });
+      } else {
+        data.forEach(org => {
+          orgSet.add(org.orgName);
+          org["env-objectStore-stats"].forEach(env => {
+            env["app-objectStore-stats"].forEach(app => {
+              app["objectStoreStats"].forEach(stat => {
+                const month = new Date(stat.timeStamp).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                monthSet.add(month);
+              });
+            });
+          });
+        });
+      }
+
+      const orgDropdown = document.getElementById("orgDropdown");
+      const monthDropdown = document.getElementById("monthDropdown");
+      orgDropdown.innerHTML = '<option value="">Select Org Name</option>';
+      monthDropdown.innerHTML = '<option value="">Select Month</option>';
+
+      [...orgSet].sort().forEach(org => {
+        const opt = document.createElement("option");
+        opt.value = org;
+        opt.textContent = org;
+        orgDropdown.appendChild(opt);
+      });
+
+      [...monthSet].sort((a, b) => new Date('1 ' + b) - new Date('1 ' + a)).forEach(month => {
+        const opt = document.createElement("option");
+        opt.value = month;
+        opt.textContent = month;
+        monthDropdown.appendChild(opt);
+      });
+    }
+
+    function showReport() {
+      const reportType = document.getElementById("reportType").value;
+      const selectedOrg = document.getElementById("orgDropdown").value;
+      const selectedMonth = document.getElementById("monthDropdown").value;
+
+      filteredData = [];
+
+      const tableHead = document.getElementById("tableHead");
+      const headers = reportType === "business_group_usage"
+        ? `<tr><th>Organization Name</th><th>Month</th><th>Request Count</th></tr>`
+        : `<tr><th>Organization Name</th><th>Env Name</th><th>App Name</th><th>Store ID</th><th>Details</th></tr>`;
+      tableHead.innerHTML = headers;
+
+      if (reportType === "business_group_usage") {
+        rawData.forEach(org => {
+          if (!selectedOrg || org.orgName === selectedOrg) {
+            org["objectStore-stats"].forEach(stat => {
+              const month = new Date(stat.timeStamp).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+              if (!selectedMonth || month === selectedMonth) {
+                filteredData.push({
+                  orgName: org.orgName,
+                  month,
+                  count: stat.objectStoreRequestCount
+                });
+              }
+            });
+          }
+        });
+      } else {
+        rawData.forEach(org => {
+          if (!selectedOrg || org.orgName === selectedOrg) {
+            org["env-objectStore-stats"].forEach(env => {
+              env["app-objectStore-stats"].forEach(app => {
+                filteredData.push({
+                  orgName: org.orgName,
+                  envName: env.envName,
+                  appName: app.appName || "(unnamed app)",
+                  storeId: app.storeId,
+                  details: app.objectStoreStats
+                });
+              });
+            });
+          }
+        });
+      }
+
+      currentPage = 1;
+      renderTable(filteredData, reportType);
+    }
+
+    function renderTable(data, reportType) {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5'>No data found</td></tr>";
+        document.getElementById("pagination").innerHTML = "";
+        return;
+      }
+
+      const totalPages = Math.ceil(data.length / pageSize);
+      const pageData = data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+      pageData.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+
+        if (reportType === "business_group_usage") {
+          tr.innerHTML = `<td>${row.orgName}</td><td>${row.month}</td><td>${row.count.toLocaleString()}</td>`;
+        } else {
+          const detailId = `detail-${currentPage}-${idx}`;
+          tr.innerHTML = `
+            <td>${row.orgName}</td>
+            <td>${row.envName}</td>
+            <td>${row.appName}</td>
+            <td>${row.storeId}</td>
+            <td><button onclick="toggleDetails('${detailId}')">Details</button></td>
+          `;
+          const detailRow = document.createElement("tr");
+          detailRow.innerHTML = `
+            <td colspan="5">
+              <div class="details" id="${detailId}">
+                <strong>Timestamped Request Counts:</strong>
+                <ul>
+                  ${row.details.map(stat =>
+                    `<li>${new Date(stat.timeStamp).toLocaleDateString('en-US')} — ${stat.objectStoreRequestCount}</li>`).join("")
+                  }
+                </ul>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+          tbody.appendChild(detailRow);
+        }
+
+        if (reportType === "business_group_usage") {
+          tbody.appendChild(tr);
+        }
+      });
+
+      renderPaginationControls(totalPages);
+    }
+
+    function toggleDetails(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === "none" || el.style.display === "" ? "block" : "none";
+    }
+
+    function renderPaginationControls(totalPages) {
+      const container = document.getElementById("pagination");
+      container.innerHTML = "";
+
+      const prevBtn = document.createElement("button");
+      prevBtn.textContent = "Prev";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { currentPage--; showReport(); };
+      container.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.disabled = currentPage === i;
+        btn.onclick = () => { currentPage = i; showReport(); };
+        container.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "Next";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { currentPage++; showReport(); };
+      container.appendChild(nextBtn);
+    }
+
+    function resetFilters() {
+      document.getElementById("orgDropdown").value = "";
+      document.getElementById("monthDropdown").value = "";
+      showReport();
+    }
+  </script>
+</body>
+</html>

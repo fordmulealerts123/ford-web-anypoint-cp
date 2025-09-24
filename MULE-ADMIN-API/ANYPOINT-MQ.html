@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Anypoint MQ Usage Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" rel="stylesheet"/>
+<!-- Add jsPDF library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<style>
+    body {
+      font-family: 'Oswald', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #00475c;
+      color: black;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, #00475c 0%, #00B5E2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .vmd-background {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40vw;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+      color: white;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      position: relative;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    button, select, input[type="month"] {
+      font-family: Oswald;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    button {
+      background-color: white;
+      color: #1B216B;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      background-color: #4553a9;
+      color: white;
+    }
+    button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #f4f4f4;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #1B216B;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #e9e9e9;
+    }
+    tr:hover {
+      background-color: #d3e1ff;
+    }
+    .pagination {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 10px;
+    }
+    .button-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .back-button {
+      background-color: white;
+      color: #1B216B;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-button:hover {
+      background-color: #4553a9;
+      color: white;
+    }
+    #spinner {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #statsSection {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e6f7ff;
+      border-left: 5px solid #1B216B;
+      border-radius: 6px;
+    }
+    #dailyBtn { display: inline-block; }
+    .export-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .back-to-top {
+      text-align: center;
+      margin: 40px 0 20px 0;
+    }
+    .back-to-top button {
+      background-color: #1B216B;
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+      button, select, input[type="month"] {
+        width: 90%;
+        max-width: 300px;
+      }
+    }
+    .selected-mode {
+      background-color: green !important;
+      color: white !important;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    /* Pagination styles */
+    .pagination button {
+        min-width: 40px;
+        padding: 8px 12px;
+        margin: 0 2px;
+        background-color: white;
+        color: #1B216B;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .pagination button:hover:not(:disabled) {
+        background-color: #4553a9;
+        color: white;
+    }
+    .pagination button:disabled {
+        background-color: #f0f0f0;
+        color: #999;
+        cursor: not-allowed;
+    }
+    .pagination button.selected-mode {
+        background-color: #1B216B;
+        color: white;
+    }
+    .pagination span {
+        padding: 8px 12px;
+        margin: 0 2px;
+    }
+</style>
+</head>
+<body>
+<div class="hero">
+<div class="vmd-background">Ford</div>
+<h1>Anypoint MQ Usage Report</h1>
+<div class="button-container">
+<button class="back-button" onclick="window.location.href='../index.html'">
+<i class="fa-solid fa-chevron-left"></i> BACK
+</button>
+</div>
+<div class="container" id="reportContainer">
+<div class="controls">
+<input id="startDate" type="month" value="2025-06"/>
+<button id="monthlyBtn" class="selected-mode">MONTHLY USAGE</button>
+<button id="dailyBtn">DAILY USAGE</button>
+<select disabled id="orgDropdown"><option value="">Select Organization</option></select>
+<select disabled id="envDropdown"><option value="">Select Environment</option></select>
+<select disabled id="monthDropdown"><option value="">Select Month</option></select>
+<button id="filterBtn">LOAD REPORT</button>
+<button disabled id="resetBtn">RESET</button>
+<div class="checkbox-container">
+<input id="excludeZero" type="checkbox"/>
+<label for="excludeZero">Hide Zero Usage</label>
+</div>
+</div>
+<div class="export-controls">
+<select id="pdfExportScope">
+<option value="current">Export Current Page</option>
+<option value="all">Export All Pages</option>
+</select>
+<button>Export CSV</button>
+<button>Export PDF</button>
+</div>
+<div id="spinner">
+<i class="fas fa-spinner fa-spin fa-2x"></i>
+<p>Loading ...</p>
+</div>
+<div id="statsSection" style="display:none;"></div>
+<table>
+<thead id="tableHead">
+<tr>
+<th>Organization</th>
+<th>Environment</th>
+<th>Month</th>
+<th>API Requests</th>
+<th>Message Receipts</th>
+<th>Billable Units</th>
+<th>Message Bytes</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+<div class="pagination" id="pagination"></div>
+</div>
+</div>
+
+<script>
+    // Initialize jsPDF
+    const { jsPDF } = window.jspdf;
+
+    // Global variables
+    let monthlyData = [];
+    let dailyData = [];
+    let isDaily = false;
+    let currentDisplayData = [];
+    let currentPage = 1;
+    const recordsPerPage = 10;
+
+    // Set current month as default on page load
+    window.onload = function() {
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+        document.getElementById("startDate").value = currentMonth;
+    };
+
+    // Monthly Report Handler
+    document.getElementById('monthlyBtn').addEventListener('click', function() {
+        document.getElementById('monthlyBtn').classList.add('selected-mode');
+        document.getElementById('dailyBtn').classList.remove('selected-mode');
+        isDaily = false;
+        
+        const monthInput = document.getElementById('startDate').value;
+        if (!monthInput) {
+            alert('Please select a month first');
+            return;
+        }
+
+        // Format the date as "1 Apr 2025"
+        const date = new Date(monthInput + '-01');
+        const formattedDate = `1 ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+
+        fetchReportData(formattedDate, '1month');
+    });
+
+    // Daily Report Handler
+    document.getElementById('dailyBtn').addEventListener('click', function() {
+        document.getElementById('dailyBtn').classList.add('selected-mode');
+        document.getElementById('monthlyBtn').classList.remove('selected-mode');
+        isDaily = true;
+        
+        const monthInput = document.getElementById('startDate').value;
+        if (!monthInput) {
+            alert('Please select a month first');
+            return;
+        }
+
+        // Create date objects for comparison
+        const selectedDate = new Date(monthInput + '-01');
+        const currentDate = new Date();
+        const sixtyDaysAgo = new Date(currentDate);
+        sixtyDaysAgo.setDate(currentDate.getDate() - 60);
+
+        // Check if selected month is within last 60 days
+        if (selectedDate < sixtyDaysAgo) {
+            alert('Daily reports are only available for the past 60 days. Please select a more recent month.');
+            return;
+        }
+
+        // Format the date as "1 Apr 2025"
+        const formattedDate = `1 ${selectedDate.toLocaleString('default', { month: 'short' })} ${selectedDate.getFullYear()}`;
+
+        fetchReportData(formattedDate, '1day');
+    });
+
+    // Filter button handler
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        applyFilters();
+    });
+
+    // Reset button handler
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        resetFilters();
+    });
+
+    // Common function to fetch report data
+    function fetchReportData(formattedDate, period) {
+        // Check for bearer token
+        // const bearerToken = sessionStorage.getItem("bearerToken");
+        // if (!bearerToken) {
+        //     alert("Bearer token missing. Please return to login.");
+        //     window.location.href = "../INDEX/ACCESS-TOOLS.html";
+        //     return;
+        // }
+
+        // Show loading spinner
+        document.getElementById('spinner').style.display = 'block';
+        document.getElementById('tableBody').innerHTML = '';
+
+        // Construct the API URL
+        const apiUrl = `http://mule-admin-api-ford.us-e2.cloudhub.io/api/platform-metrics/anypointMQStats?startDate=${encodeURIComponent(formattedDate)}&period=${period}`;
+        //const apiUrl = `http://localhost:8081/api/platform-metrics/anypointMQStats?startDate=${encodeURIComponent(formattedDate)}&period=${period}`;
+
+        // Make the API call
+        fetch(apiUrl, {
+            method: 'GET',
+            // headers: {
+            //     'Authorization': `Bearer ${bearerToken}`
+            // }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (isDaily) {
+                dailyData = processDailyData(data);
+                currentDisplayData = [...dailyData];
+                displayData(currentDisplayData);
+            } else {
+                monthlyData = data;
+                currentDisplayData = processMonthlyData(data);
+                displayData(currentDisplayData);
+            }
+            
+            // Enable filter controls
+            document.getElementById('filterBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+            document.getElementById('orgDropdown').disabled = false;
+            document.getElementById('envDropdown').disabled = false;
+            document.getElementById('monthDropdown').disabled = false;
+            
+            // Populate dropdowns
+            populateDropdowns(data);
+        })
+        .catch(error => {
+            console.error('Error fetching report:', error);
+            alert(`Failed to load ${isDaily ? 'daily' : 'monthly'} report data`);
+        })
+        .finally(() => {
+            // Hide loading spinner
+            document.getElementById('spinner').style.display = 'none';
+        });
+    }
+
+    function processDailyData(data) {
+        let dailyList = [];
+        
+        data.forEach(org => {
+            org["env-anypointMQ-stats"]?.forEach(env => {
+                env["anypointMQ-stats"]?.forEach(stat => {
+                    const dateStr = new Date(stat.timestamp).toISOString().split('T')[0];
+                    dailyList.push({
+                        orgName: org.orgName,
+                        envName: env.envName,
+                        date: dateStr,
+                        apiRequestCount: stat.apiRequestCount || 0,
+                        messageReceiptCount: stat.messageReceiptCount || 0,
+                        billableUnitCount: stat.billableUnitCount || 0,
+                        messageByteCount: stat.messageByteCount || 0,
+                        displayMonth: new Date(stat.timestamp).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+                    });
+                });
+            });
+        });
+
+        return dailyList.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function processMonthlyData(data) {
+        let monthlyList = [];
+        
+        data.forEach(org => {
+            org["env-anypointMQ-stats"]?.forEach(env => {
+                env["anypointMQ-stats"]?.forEach(stat => {
+                    const statDate = new Date(stat.timestamp);
+                    const displayMonth = statDate.toLocaleString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    
+                    monthlyList.push({
+                        orgName: org.orgName,
+                        envName: env.envName,
+                        month: displayMonth,
+                        date: statDate.toISOString().split('T')[0],
+                        apiRequestCount: stat.apiRequestCount || 0,
+                        messageReceiptCount: stat.messageReceiptCount || 0,
+                        billableUnitCount: stat.billableUnitCount || 0,
+                        messageByteCount: stat.messageByteCount || 0,
+                        displayMonth: displayMonth
+                    });
+                });
+            });
+        });
+
+        return monthlyList.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function displayData(data) {
+        const tableBody = document.getElementById('tableBody');
+        const tableHead = document.getElementById('tableHead');
+        
+        tableHead.innerHTML = isDaily ? `
+            <tr>
+                <th>Date</th>
+                <th>Organization</th>
+                <th>Environment</th>
+                <th>API Requests</th>
+                <th>Message Receipts</th>
+                <th>Billable Units</th>
+                <th>Message Bytes</th>
+            </tr>
+        ` : `
+            <tr>
+                <th>Organization</th>
+                <th>Environment</th>
+                <th>Month</th>
+                <th>API Requests</th>
+                <th>Message Receipts</th>
+                <th>Billable Units</th>
+                <th>Message Bytes</th>
+            </tr>
+        `;
+        
+        tableBody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="7">No data available for the selected filters</td>';
+            tableBody.appendChild(row);
+            document.getElementById('pagination').style.display = 'none';
+            return;
+        }
+
+        // Calculate pagination
+        const totalPages = Math.ceil(data.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, data.length);
+        const pageData = data.slice(startIndex, endIndex);
+
+        // Process each entry for current page
+        pageData.forEach(rowData => {
+            const row = document.createElement('tr');
+            row.innerHTML = isDaily ? `
+                <td>${rowData.date}</td>
+                <td>${rowData.orgName || 'N/A'}</td>
+                <td>${rowData.envName || 'N/A'}</td>
+                <td>${rowData.apiRequestCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.messageReceiptCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.billableUnitCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.messageByteCount?.toLocaleString() || '0'}</td>
+            ` : `
+                <td>${rowData.orgName || 'N/A'}</td>
+                <td>${rowData.envName || 'N/A'}</td>
+                <td>${rowData.displayMonth}</td>
+                <td>${rowData.apiRequestCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.messageReceiptCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.billableUnitCount?.toLocaleString() || '0'}</td>
+                <td>${rowData.messageByteCount?.toLocaleString() || '0'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Update pagination controls
+        updatePaginationControls(data.length);
+    }
+
+    function updatePaginationControls(totalRecords) {
+        const paginationDiv = document.getElementById('pagination');
+        paginationDiv.innerHTML = '';
+        paginationDiv.style.display = 'flex';
+
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+        
+        // Don't show pagination if only one page
+        if (totalPages <= 1) {
+            paginationDiv.style.display = 'none';
+            return;
+        }
+
+        // Previous button
+        const prevButton = document.createElement('button');
+        prevButton.innerHTML = '&laquo;';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayData(currentDisplayData);
+            }
+        });
+        paginationDiv.appendChild(prevButton);
+
+        // Page numbers
+        const maxVisiblePages = 5; // Show up to 5 page numbers at a time
+        let startPage, endPage;
+        
+        if (totalPages <= maxVisiblePages) {
+            startPage = 1;
+            endPage = totalPages;
+        } else {
+            const maxPagesBeforeCurrent = Math.floor(maxVisiblePages / 2);
+            const maxPagesAfterCurrent = Math.ceil(maxVisiblePages / 2) - 1;
+            
+            if (currentPage <= maxPagesBeforeCurrent) {
+                startPage = 1;
+                endPage = maxVisiblePages;
+            } else if (currentPage + maxPagesAfterCurrent >= totalPages) {
+                startPage = totalPages - maxVisiblePages + 1;
+                endPage = totalPages;
+            } else {
+                startPage = currentPage - maxPagesBeforeCurrent;
+                endPage = currentPage + maxPagesAfterCurrent;
+            }
+        }
+
+        // Add page number buttons
+        if (startPage > 1) {
+            const firstPageButton = document.createElement('button');
+            firstPageButton.textContent = '1';
+            firstPageButton.addEventListener('click', () => {
+                currentPage = 1;
+                displayData(currentDisplayData);
+            });
+            paginationDiv.appendChild(firstPageButton);
+
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                paginationDiv.appendChild(ellipsis);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.textContent = i;
+            if (i === currentPage) {
+                pageButton.classList.add('selected-mode');
+                pageButton.disabled = true;
+            }
+            pageButton.addEventListener('click', () => {
+                currentPage = i;
+                displayData(currentDisplayData);
+            });
+            paginationDiv.appendChild(pageButton);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                paginationDiv.appendChild(ellipsis);
+            }
+
+            const lastPageButton = document.createElement('button');
+            lastPageButton.textContent = totalPages;
+            lastPageButton.addEventListener('click', () => {
+                currentPage = totalPages;
+                displayData(currentDisplayData);
+            });
+            paginationDiv.appendChild(lastPageButton);
+        }
+
+        // Next button
+        const nextButton = document.createElement('button');
+        nextButton.innerHTML = '&raquo;';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayData(currentDisplayData);
+            }
+        });
+        paginationDiv.appendChild(nextButton);
+    }
+
+    function applyFilters() {
+        const orgFilter = document.getElementById('orgDropdown').value;
+        const envFilter = document.getElementById('envDropdown').value;
+        const monthFilter = document.getElementById('monthDropdown').value;
+        const hideZero = document.getElementById('excludeZero').checked;
+
+        let filteredData = isDaily ? [...dailyData] : [...currentDisplayData];
+
+        // Apply filters
+        if (orgFilter) {
+            filteredData = filteredData.filter(item => item.orgName === orgFilter);
+        }
+        if (envFilter) {
+            filteredData = filteredData.filter(item => item.envName === envFilter);
+        }
+        if (monthFilter) {
+            filteredData = filteredData.filter(item => item.displayMonth === monthFilter);
+        }
+        if (hideZero) {
+            filteredData = filteredData.filter(item => 
+                item.apiRequestCount > 0 ||
+                item.messageReceiptCount > 0 ||
+                item.billableUnitCount > 0 ||
+                item.messageByteCount > 0
+            );
+        }
+
+        // Reset to first page when filters change
+        currentPage = 1;
+        currentDisplayData = filteredData;
+        displayData(currentDisplayData);
+    }
+
+    function resetFilters() {
+        // Reset dropdown selections
+        document.getElementById('orgDropdown').value = '';
+        document.getElementById('envDropdown').value = '';
+        document.getElementById('monthDropdown').value = '';
+        document.getElementById('excludeZero').checked = false;
+
+        // Reset pagination
+        currentPage = 1;
+
+        // Reset displayed data
+        currentDisplayData = isDaily ? [...dailyData] : [...processMonthlyData(monthlyData)];
+        displayData(currentDisplayData);
+    }
+
+    function populateDropdowns(data) {
+        const orgDropdown = document.getElementById('orgDropdown');
+        const envDropdown = document.getElementById('envDropdown');
+        const monthDropdown = document.getElementById('monthDropdown');
+
+        // Clear existing options
+        orgDropdown.innerHTML = '<option value="">Select Organization</option>';
+        envDropdown.innerHTML = '<option value="">Select Environment</option>';
+        monthDropdown.innerHTML = '<option value="">Select Month</option>';
+
+        const orgs = new Set();
+        const envs = new Set();
+        const months = new Set();
+
+        // Collect unique values
+        data.forEach(org => {
+            orgs.add(org.orgName);
+            
+            org["env-anypointMQ-stats"]?.forEach(env => {
+                envs.add(env.envName);
+                
+                env["anypointMQ-stats"]?.forEach(stat => {
+                    const statDate = new Date(stat.timestamp);
+                    const month = statDate.toLocaleString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    months.add(month);
+                });
+            });
+        });
+
+        // Populate organization dropdown
+        orgs.forEach(org => {
+            const option = document.createElement('option');
+            option.value = org;
+            option.textContent = org;
+            orgDropdown.appendChild(option);
+        });
+
+        // Populate environment dropdown
+        envs.forEach(env => {
+            const option = document.createElement('option');
+            option.value = env;
+            option.textContent = env;
+            envDropdown.appendChild(option);
+        });
+
+        // Populate month dropdown (sorted newest first)
+        Array.from(months)
+            .sort((a, b) => new Date(b) - new Date(a))
+            .forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthDropdown.appendChild(option);
+            });
+    }
+
+    // Export to CSV function
+    document.querySelector('.export-controls button:nth-of-type(1)').addEventListener('click', function() {
+        exportToCSV();
+    });
+
+    // Export to PDF function
+    document.querySelector('.export-controls button:nth-of-type(2)').addEventListener('click', function() {
+        exportToPDF();
+    });
+
+    function exportToCSV() {
+        const scope = document.getElementById('pdfExportScope').value;
+        
+        if (currentDisplayData.length === 0) {
+            alert("No data to export");
+            return;
+        }
+
+        // Prepare headers
+        const headers = isDaily 
+            ? ["Date", "Organization", "Environment", "API Requests", "Message Receipts", "Billable Units", "Message Bytes"]
+            : ["Organization", "Environment", "Month", "API Requests", "Message Receipts", "Billable Units", "Message Bytes"];
+
+        // Prepare data to export
+        const dataToExport = scope === "all" ? currentDisplayData : getCurrentPageData();
+        
+        // Create CSV content
+        let csvContent = headers.join(",") + "\n";
+        
+        dataToExport.forEach(row => {
+            const values = isDaily
+                ? [
+                    row.date,
+                    row.orgName,
+                    row.envName,
+                    row.apiRequestCount,
+                    row.messageReceiptCount,
+                    row.billableUnitCount,
+                    row.messageByteCount
+                ]
+                : [
+                    row.orgName,
+                    row.envName,
+                    row.displayMonth,
+                    row.apiRequestCount,
+                    row.messageReceiptCount,
+                    row.billableUnitCount,
+                    row.messageByteCount
+                ];
+            csvContent += values.join(",") + "\n";
+        });
+
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", getExportFilename('csv', scope));
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function exportToPDF() {
+        const scope = document.getElementById('pdfExportScope').value;
+        
+        if (currentDisplayData.length === 0) {
+            alert("No data to export");
+            return;
+        }
+
+        // Prepare data
+        const dataToExport = scope === "all" ? currentDisplayData : getCurrentPageData();
+        const headers = isDaily 
+            ? ["Date", "Organization", "Environment", "API Requests", "Message Receipts", "Billable Units", "Message Bytes"]
+            : ["Organization", "Environment", "Month", "API Requests", "Message Receipts", "Billable Units", "Message Bytes"];
+
+        const rows = dataToExport.map(row => {
+            return isDaily
+                ? [
+                    row.date,
+                    row.orgName || 'N/A',
+                    row.envName || 'N/A',
+                    row.apiRequestCount?.toLocaleString() || '0',
+                    row.messageReceiptCount?.toLocaleString() || '0',
+                    row.billableUnitCount?.toLocaleString() || '0',
+                    row.messageByteCount?.toLocaleString() || '0'
+                ]
+                : [
+                    row.orgName || 'N/A',
+                    row.envName || 'N/A',
+                    row.displayMonth,
+                    row.apiRequestCount?.toLocaleString() || '0',
+                    row.messageReceiptCount?.toLocaleString() || '0',
+                    row.billableUnitCount?.toLocaleString() || '0',
+                    row.messageByteCount?.toLocaleString() || '0'
+                ];
+        });
+
+        // Create PDF
+        const doc = new jsPDF();
+        const now = new Date();
+        const reportType = isDaily ? 'Daily' : 'Monthly';
+        const title = `Anypoint MQ ${reportType} Usage Report - ${now.toLocaleDateString()}`;
+
+        // Add title
+        doc.setFontSize(16);
+        doc.text(title, 14, 15);
+        
+        // Add table
+        doc.autoTable({
+            startY: 25,
+            head: [headers],
+            body: rows,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [27, 33, 107] }
+        });
+
+        // Save PDF
+        doc.save(getExportFilename('pdf', scope));
+    }
+
+    function getCurrentPageData() {
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = startIndex + recordsPerPage;
+        return currentDisplayData.slice(startIndex, endIndex);
+    }
+
+    function getExportFilename(extension, scope) {
+        const now = new Date();
+        const reportType = isDaily ? 'Daily' : 'Monthly';
+        const scopeType = scope === 'all' ? 'AllPages' : 'CurrentPage';
+        const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        
+        return `AnypointMQ_${reportType}_Report_${scopeType}_${timestamp}.${extension}`;
+    }
+</script>
+</body>
+</html>

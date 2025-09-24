@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONNECTOR UPDATE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+       body {
+                font-family: 'PlacardNextRegular', sans-serif;
+                margin: 0;
+                padding: 0;
+                background: #1B216B;
+                color: rgb(12, 12, 12);
+                height: 100vh;
+                overflow-x: hidden;
+            }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #ffd008;
+            margin-top: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 2em;
+            color: #ffd008;
+            margin-top: 20px;
+        }
+
+        .header-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center align items */
+            margin-bottom: 20px; /* Space below the header */
+        }
+
+
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            margin: 0 auto;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 20px;
+            color: #ffd008;
+        }
+
+        #searchBarContainer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #loadingIndicator {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            font-size: 2.5em;
+            color: #ffd008;
+        }
+
+        #updateButtonsContainer {
+            display: flex;
+            justify-content: center;
+            /* Centers horizontally */
+            align-items: center;
+            /* Centers vertically */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            gap: 20px;
+        }
+
+        #searchInput {
+            font-family: Oswald;
+            flex-grow: 1;
+            max-width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #searchButton {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #1b216b;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #searchButton:hover {
+            background-color: #4553a9;
+        }
+
+        select,
+        button {
+            font-family: Oswald;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            color: #1b216b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #ffd008;
+            color: #1b216b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4553a9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border-top: 6px solid #b6dad2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            max-width: 1200px;
+            background-color: #f4f4f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            table-layout: auto;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+            white-space: nowrap;
+            /* Prevent text wrapping */
+        }
+
+        th {
+            background-color: #989eec;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .home-button,
+        .back-button {
+                background-color: #FFDA3D;
+                color: #1B216B;
+                border: none;
+                padding: 10px 15px;
+                font-size: 16px;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+            .home-button:hover,
+            .back-button:hover {
+                background-color: #4553a9;
+                color: white;
+            }
+    
+            .home-container {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                display: flex;
+                gap: 10px;
+            }
+
+
+        /* Report Section */
+        #report {
+            display: none;
+            margin: 20px auto;
+            max-width: 1700px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            margin: 0;
+        }
+
+        button {
+            font-size: normal;
+        }
+
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 5px;
+            }
+
+            #searchBarContainer {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            #searchInput {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+
+            #pagination button {
+                padding: 5px 10px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.4em;
+            }
+
+            #controls label {
+                font-size: 16px;
+
+            }
+
+            #searchInput {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            #searchButton {
+                padding: 8px;
+            }
+
+            th,
+            td {
+                font-size: 10px;
+                padding: 5px;
+            }
+
+            table {
+                max-width: 100%;
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        /* Wrapper for horizontal scrollbars */
+        .table-scroll-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            /* Space between scrollbars and the table */
+        }
+
+        .table-scroll-wrapper .scrollbar {
+            overflow-x: auto;
+            /* Enable horizontal scrolling */
+        }
+
+        .table-scroll-wrapper .scrollbar::-webkit-scrollbar {
+            height: 8px;
+            /* Style the scrollbar for better visibility */
+        }
+
+        .table-scroll-wrapper .scrollbar::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+        /* Ensure table fits within scrollable area */
+        .table-scroll-wrapper table {
+            width: 1000px;
+            /* Minimum table width to trigger scrolling */
+        }
+
+        /* Responsiveness: Adjust behavior for smaller screens */
+        @media (max-width: 768px) {
+            .table-scroll-wrapper table {
+                width: 1000px;
+                /* Maintain fixed width for smaller screens */
+            }
+        }
+
+        .fa-sort-up,
+        .fa-sort-down {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="home-container">
+       
+        <button class="back-button" onclick="window.location.href='../INDEX/ACCESS-TOOLS.HTML'">
+            <i class="fa-solid fa-chevron-left"></i> BACK
+        </button>
+    </div>
+    <div class="header-container">
+        <h1>CONNECTOR VERSION UPDATES</h1>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator">Loading data, please wait...</div>
+
+    <!-- Projects Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody id="projectsTableBody">
+            <!-- Dynamic content will be inserted here -->
+        </tbody>
+    </table>
+
+    <!-- Container for connector tables -->
+    <div id="connectorsTableContainer"></div>
+
+    <button onclick="updateAllConnectors()">Update Connectors In All Projects</button>
+
+    <script>
+        let data = [];
+        const BASE_URL = "http://localhost:8081";
+
+
+        // Show loading indicator with a custom message
+        function showLoadingIndicator(message = 'Loading data, please wait...') {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.textContent = message;
+            loadingIndicator.style.display = 'block';
+        }
+
+        // Hide loading indicator
+        function hideLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        // Fetch data from the API and populate the table when the page loads
+        window.onload = async () => {
+            showLoadingIndicator('Fetching data, please wait...');
+            await fetchData();
+            hideLoadingIndicator();
+        };
+
+        // Fetch data from the API
+        async function fetchData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/connector-version/applications`);
+                if (!response.ok) throw new Error('Failed to fetch data');
+
+                data = await response.json();
+                populateProjectsTable(); // Populate the table with project names
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('Unable to fetch project data. Please try again later.');
+            }
+        }
+
+        // Populate the table with project names and links
+        function populateProjectsTable() {
+            const tableBody = document.getElementById('projectsTableBody');
+            tableBody.innerHTML = '';
+
+            data.forEach(app => {
+                const row = document.createElement('tr');
+
+                // Project Name Cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = app.applicationName;
+                row.appendChild(nameCell);
+
+                // Details Link Cell
+                const detailsCell = document.createElement('td');
+                const detailsLink = document.createElement('a');
+                detailsLink.textContent = 'Connector Version Details';
+                detailsLink.href = '#';
+                detailsLink.onclick = (e) => {
+                    e.preventDefault();
+                    loadConnectors(app.applicationName);
+                };
+                detailsLink.setAttribute('aria-label', `View connector details for ${app.applicationName}`);
+                detailsCell.appendChild(detailsLink);
+                row.appendChild(detailsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Load connectors for the selected application
+        function loadConnectors(selectedAppName) {
+            const tableContainer = document.getElementById('connectorsTableContainer');
+
+            const selectedApp = data.find(app => app.applicationName === selectedAppName);
+            if (!selectedApp) {
+                tableContainer.innerHTML = '<p>No data found for this application.</p>';
+                return;
+            }
+
+            // Generate tables for connectors
+            const supportedConnectors = selectedApp.connectors.filter(
+                connector => connector.latestVersionInExchange !== "Unsupported"
+            );
+            const unsupportedConnectors = selectedApp.connectors.filter(
+                connector => connector.latestVersionInExchange === "Unsupported"
+            );
+
+            let htmlContent = '';
+
+            let supportedTableHtml = `
+                <h2>Supported Connectors</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Connector Name</th>
+                            <th>Connector Group</th>
+                            <th>Current Version in API</th>
+                            <th>Latest Version in Exchange</th>
+                            <th>Java 17 Support</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            supportedConnectors.forEach(connector => {
+                supportedTableHtml += `
+                    <tr>
+                        <td>${connector.connectorName}</td>
+                        <td>${connector.connectorGroupName}</td>
+                        <td>${connector.currentVersionInApi}</td>
+                        <td>${connector.latestVersionInExchange}</td>
+                        <td>${connector["Java 17"]}</td>
+                        <td>
+                            ${connector.currentVersionInApi !== connector.latestVersionInExchange
+                        ? `<button onclick="updateVersion('${connector.connectorName}', '${selectedAppName}')">Update</button>`
+                        : `Up to date`
+                    }
+                        </td>
+                    </tr>`;
+            });
+            supportedTableHtml += `</tbody></table>`;
+
+            if (unsupportedConnectors.length > 0) {
+                let unsupportedTableHtml = `
+                    <h2>Unsupported Connectors</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Connector Name</th>
+                                <th>Connector Group</th>
+                                <th>Current Version in API</th>
+                                <th>Connector Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                unsupportedConnectors.forEach(connector => {
+                    unsupportedTableHtml += `
+                        <tr>
+                            <td>${connector.connectorName}</td>
+                            <td>${connector.connectorGroupName}</td>
+                            <td>${connector.currentVersionInApi}</td>
+                            <td>${connector.latestVersionInExchange}</td>
+                        </tr>`;
+                });
+                unsupportedTableHtml += `</tbody></table>`;
+                htmlContent = supportedTableHtml + unsupportedTableHtml;
+            } else {
+                htmlContent = supportedTableHtml;
+            }
+
+            htmlContent += `
+                <button onclick="updateSingleProject('${selectedAppName}')">
+                    Update All Connectors for ${selectedAppName}
+                </button>`;
+
+            tableContainer.innerHTML = htmlContent;
+        }
+
+        // Reload the previous state after a page refresh
+        function reloadPreviousState() {
+            const selectedAppName = localStorage.getItem('selectedAppName');
+            if (selectedAppName) {
+                document.getElementById('applicationSelect').value = selectedAppName;
+                loadConnectors();
+            }
+        }
+
+        // Update a single connector
+        function updateVersion(connectorName, appName) {
+            showLoadingIndicator(`Processing...`);
+            const url = `${BASE_URL}/api/connector-version/application-connector-update/${appName}/${encodeURIComponent(connectorName)}`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to update connector');
+                    return response.text();
+                })
+                .then(() => {
+                    hideLoadingIndicator();
+                    alert(`Connector '${connectorName}' updated successfully for project '${appName}'!`);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideLoadingIndicator();
+                    alert(`Failed to update connector '${connectorName}'.`);
+                });
+        }
+
+        // Update all connectors for a single project
+        function updateSingleProject(appName) {
+            showLoadingIndicator(`Processing...`);
+            const url = `${BASE_URL}/api/connector-version/application-connectors-update/${appName}`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to update project');
+                    return response.text();
+                })
+                .then(() => {
+                    hideLoadingIndicator();
+                    alert(`All connectors updated successfully for project '${appName}'!`);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideLoadingIndicator();
+                    alert(`Failed to update all connectors for project '${appName}'.`);
+                });
+        }
+
+        // Update all connectors across all projects
+        function updateAllConnectors() {
+            showLoadingIndicator('Processing...');
+            const url = `${BASE_URL}/api/connector-version/all-applications-connectors-update`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to update all connectors');
+                    return response.text();
+                })
+                .then(() => {
+                    hideLoadingIndicator();
+                    alert('All connectors updated successfully!');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideLoadingIndicator();
+                    alert('Failed to update all connectors.');
+                });
+        }
+    </script>
+</body>
+
+</html>

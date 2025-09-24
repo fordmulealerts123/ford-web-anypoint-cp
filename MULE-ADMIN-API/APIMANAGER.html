@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-MANAGER</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Oswald', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1CBADE;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* Prevent horizontal scrolling */
+        }
+
+        /* Header Styles */
+        h1 {
+            text-align: center;
+            font-size: 2.8em;
+            margin: 20px;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Controls Section */
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            /* Adjusted spacing for compact design */
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* Form Elements */
+        label {
+            font-weight: bold;
+            font-size: 20px;
+            color: white  ;
+        }
+
+        select,
+        button {
+            font-family: Oswald;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            color: #1b216b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background-color: white;
+            color: #1B216B;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #4553a9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            /* Change to 100% to fit the container */
+            max-width: 100%;
+            /* Prevents the table from exceeding the container width */
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: #f4f4f4;
+            color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        th,
+        td {
+            padding: 10px;
+            /* Reduced padding */
+            text-align: left;
+            border-bottom: 1px solid #000000;
+        }
+
+        th {
+            background-color: #1b216b;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+            /* Prevent header text wrapping */
+        }
+
+        tr:nth-child(even) {
+            background-color: #e8e8f0;
+        }
+
+        tr:hover {
+            background-color: #d4d4e4;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: white;
+            color: #1B216B;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background-color: #4553a9;
+        }
+
+        .pagination button[disabled] {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            color: #333;
+            border-radius: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Spinner Styles */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+
+        #emailInput {
+            max-width: 600px;
+            /* Increased size */
+            padding: 8px;
+            /* Consistent padding */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Add this to the report container to prevent horizontal scrolling */
+        #report {
+            overflow-x: hidden;
+            /* Prevent horizontal scrolling */
+        }
+
+        /* Ensure the reportContent also does not allow horizontal scrolling */
+        #reportContent {
+            overflow-x: hidden;
+            /* Prevent horizontal scrolling */
+        }
+
+        /* Search Bar */
+        #searchBarContainer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            /* Adjusted spacing */
+        }
+
+        #searchInput {
+            font-family: Oswald, sans-serif;
+            flex-grow: 1;
+            max-width: 300px;
+            padding: 8px 10px;
+            /* Reduced padding */
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #searchButton {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: white;
+            color: #4553a9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #searchButton:hover {
+            background-color: #4553a9;
+        }
+
+        /* Stats Container */
+        .stats-container {
+            margin: 20px auto;
+            padding: 15px;
+            /* Reduced padding */
+            background: #ffffff;
+            color: #000000;
+            font-family: 'Oswald', sans-serif;
+            border-radius: 10px;
+            max-width: 90%;
+            /* Adjusted for responsiveness */
+        }
+
+        .stats-container h3 {
+            margin: 0 0 10px;
+            font-size: 1.5em;
+            color: #000000;
+        }
+
+        .stats-container p,
+        .stats-container ul {
+            margin: 10px 0;
+            font-size: 1.1em;
+            line-height: 1.5em;
+        }
+
+        .stats-container ul {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .stats-container ul li {
+            margin: 5px 0;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .button-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.home-button, 
+.back-button {
+    background-color: white;
+    color: #1B216B;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-button:hover, 
+.back-button:hover {
+    background-color: #4553a9;
+    color: white;
+}
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            table th,
+            table td {
+                padding: 8px;
+                /* Adjust padding for smaller screens */
+            }
+
+            .pagination button {
+                padding: 6px 10px;
+                /* Adjust button size */
+                font-size: 12px;
+                /* Smaller font size */
+            }
+
+            #emailInput {
+                max-width: 800px;
+                /* Increased size */
+                padding: 12px;
+                /* Increased padding for a larger feel */
+                font-size: 18px;
+                /* Increased font size */
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                transition: border-color 0.3s ease;
+                /* Smooth transition for border color */
+            }
+
+            #emailInput:focus {
+                border-color: #1b216b;
+                /* Change border color on focus */
+                outline: none;
+                /* Remove default outline */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="button-container">
+        
+        <button class="back-button" onclick="window.location.href='../index.html'">
+            <i class="fa-solid fa-chevron-left"></i> BACK
+        </button>
+    </div>
+    
+    <h1>API-MANAGER</h1>
+    <div id="controls">
+        <div>
+            <label for="businessGroup">Business Group:</label>
+            <select id="businessGroup">
+                <option value="">Select Business Group</option>
+            </select>
+        </div>
+        <div>
+            <label for="environment">Environment:</label>
+            <select id="environment">
+                <option value="">Select Environment</option>
+            </select>
+        </div>
+        <div>
+            <label for="status">Status:</label>
+            <select id="status">
+                <option value="">Select Status</option>
+            </select>
+        </div>
+        <div>
+            <label for="ownerName">Owner Name:</label>
+            <select id="ownerName">
+                <option value="">Select Owner</option>
+            </select>
+        </div>
+        <div>
+            <label for="managerName">Manager Name:</label>
+            <select id="managerName">
+                <option value="">Select Manager</option>
+            </select>
+        </div>
+        <div>
+            <button id="loadDataBtn"><i class="fa-solid fa-circle-notch"></i> LOAD DETAILS</button>
+            <button id="filterReportBtn" disabled><i class="fa-solid fa-scroll"></i> LOAD REPORT</button>
+        </div>
+        <div id="searchBarContainer">
+            <input type="text" id="searchInput" placeholder="Give min 2 characters" oninput="searchApplications()"
+                style="max-width: 300px;">
+            <button id="searchButton"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div>
+            <button id="sendEmailButton" disabled><i class="fa-regular fa-paper-plane"></i> SEND REPORT</button>
+        </div>
+        <div id="reportControls">
+            <label for="emailInput">Email:</label>
+            <input type="email" id="emailInput" placeholder="Enter email address" style="max-width: 400px;">
+            <button id="sendFullReportButton" disabled><i class="fa-regular fa-paper-plane"></i> SEND FULL
+                REPORT</button>
+        </div>
+        <div id="ownerDropdownContainer" style="display: none;">
+            <label for="ownerName">Owner Name:</label>
+            <select id="ownerName">
+                <option value="">Select Owner</option>
+            </select>
+        </div>
+    </div>
+    <div id="spinner" class="spinner"></div>
+
+    <div id="report">
+        <div id="reportContent"></div>
+        <div class="pagination" id="pagination"></div>
+
+        <div id="detailsModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="detailsContent"></div>
+            </div>
+        </div>
+
+                <script>
+            // Define the base URL variable
+            const BASE_URL = 'http://mule-admin-api-ford.us-e2.cloudhub.io';
+            //const BASE_URL = "http://localhost:8081"       
+            const apiResponsePath = `${BASE_URL}/api/platform-metrics/api-manager/api-details`;
+
+            const pageSize = 5;
+            let allApis = [];
+            let currentPage = 1;
+            document.addEventListener("DOMContentLoaded", () => {
+                const reportContent = document.getElementById("reportContent");
+                const topScroll = document.querySelector(".top-scroll .dummy-scroll");
+                topScroll.style.width = `${reportContent.scrollWidth}px`;
+                syncScroll();
+            });
+            document.addEventListener("DOMContentLoaded", () => {
+                document.getElementById("loadDataBtn").addEventListener("click", loadData);
+                document.getElementById("filterReportBtn").addEventListener("click", filterReport);
+
+                const modal = document.getElementById("detailsModal");
+                const closeBtn = modal.querySelector(".close");
+                closeBtn.addEventListener("click", () => {
+                    modal.style.display = "none";
+                });
+
+                window.addEventListener("click", (event) => {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                });
+
+                // Enable Load Report button when dropdown changes
+                const dropdowns = ["businessGroup", "environment", "status", "ownerName", "managerName"];
+                dropdowns.forEach(id => {
+                    document.getElementById(id).addEventListener("change", () => {
+                        document.getElementById("filterReportBtn").disabled = false;
+                        updateEmailButtonState(); // Update email button state
+                        updateFullReportButtonState(); // Update full report button state
+                    });
+                });
+            });
+            document.addEventListener("DOMContentLoaded", () => {
+                const sendEmailButton = document.getElementById("sendEmailButton");
+                const ownerDropdown = document.getElementById("ownerName");
+                const managerDropdown = document.getElementById("managerName");
+                const emailInput = document.getElementById("emailInput");
+                const sendFullReportButton = document.getElementById("sendFullReportButton");
+
+                // Enable/Disable button based on owner or manager selection
+                function updateEmailButtonState() {
+                    sendEmailButton.disabled = ownerDropdown.value === "" && managerDropdown.value === "";
+                }
+
+                ownerDropdown.addEventListener("change", updateEmailButtonState);
+                managerDropdown.addEventListener("change", updateEmailButtonState);
+
+                sendEmailButton.addEventListener("click", () => {
+                    const ownerName = ownerDropdown.value.trim();
+                    const managerName = managerDropdown.value.trim();
+
+                    if (!ownerName && !managerName) {
+                        alert("Please select at least one: Owner or Manager.");
+                        return;
+                    }
+
+                    // Construct query parameters dynamically
+                    let queryParams = "controlPlane=APIManager";
+                    if (ownerName) queryParams += `&ownerName=${encodeURIComponent(ownerName)}`;
+                    if (managerName) queryParams += `&managerName=${encodeURIComponent(managerName)}`;
+
+                    // Construct the API URL
+                    const emailApiUrl = `${BASE_URL}/api/platform-metrics/send-report?${queryParams}`;
+
+                    // Send request
+                    fetch(emailApiUrl, { method: "GET" }) // Using GET as per your updated URL
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log("API Response:", data);
+                            alert("Email sent successfully!");
+                        })
+                        .catch(error => {
+                            console.error("Error sending email:", error);
+                            alert(`Failed to send email: ${error.message}`);
+                        });
+                });
+
+                // Full Report Button Functionality
+                function updateFullReportButtonState() {
+                    const ownerName = ownerDropdown.value.trim();
+                    const managerName = managerDropdown.value.trim();
+                    const emailValue = emailInput.value.trim();
+
+                    // Enable the button if either an owner/manager is selected or a valid email is entered
+                    sendFullReportButton.disabled = !(ownerName || managerName || validateEmail(emailValue));
+                }
+
+                ownerDropdown.addEventListener("change", updateFullReportButtonState);
+                managerDropdown.addEventListener("change", updateFullReportButtonState);
+                emailInput.addEventListener("input", updateFullReportButtonState); // Add this line
+
+                sendFullReportButton.addEventListener("click", () => {
+                    const ownerName = ownerDropdown.value.trim();
+                    const managerName = managerDropdown.value.trim();
+                    const emailValue = emailInput.value.trim();
+
+                    if (!ownerName && !managerName && !validateEmail(emailValue)) {
+                        alert("Please select at least one: Owner or Manager, or enter a valid email.");
+                        return;
+                    }
+
+                    // Construct query parameters dynamically
+                    let queryParams = `controlPlane=APIManager`;
+                    if (ownerName) queryParams += `&ownerName=${encodeURIComponent(ownerName)}`;
+                    if (managerName) queryParams += `&managerName=${encodeURIComponent(managerName)}`;
+                    if (validateEmail(emailValue)) queryParams += `&email=${encodeURIComponent(emailValue)}`; // Add email to query params
+
+                    // Construct the API URL
+                    const fullReportApiUrl = `${BASE_URL}/api/platform-metrics/full-report?${queryParams}`;
+
+                    // Send request
+                    fetch(fullReportApiUrl, { method: "GET" })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log("Full Report Response:", data);
+                            alert("Full report sent successfully!");
+                        })
+                        .catch(error => {
+                            console.error("Error sending full report:", error);
+                            alert(`Failed to send full report: ${error.message}`);
+                        });
+                });
+            });
+
+            // Function to validate email format
+            function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple regex for email validation
+                return re.test(email);
+            }
+
+            function loadData() {
+    document.getElementById("spinner").style.display = "block";
+    document.getElementById("loadDataBtn").style.display = "none";
+
+    fetch(apiResponsePath)
+        .then(response => response.json())
+        .then(data => {
+            apiDataCache = data; // Store the fetched data in the cache
+            populateDropdowns(data);
+
+            // Check if there are filtered results
+            if (filteredApis.length > 0) {
+                // If there are filtered results, render them instead of resetting
+                renderFilteredReport(false);
+            } else {
+                // If no filtered results, enable the Load Report button
+                document.getElementById("filterReportBtn").disabled = false; 
+            }
+
+            document.getElementById("spinner").style.display = "none";
+            alert("Details loaded successfully.");
+        })
+        .catch(error => {
+            console.error("Error loading data:", error);
+            alert("Failed to load details.");
+            document.getElementById("spinner").style.display = "none";
+        });
+}
+            function populateDropdowns(data) {
+                const businessGroupDropdown = document.getElementById("businessGroup");
+                const environmentDropdown = document.getElementById("environment");
+                const statusDropdown = document.getElementById("status");
+                const ownerNameDropdown = document.getElementById("ownerName");
+                const managerNameDropdown = document.getElementById("managerName");
+
+                // Reset dropdowns
+                businessGroupDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+                environmentDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+                statusDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+                ownerNameDropdown.innerHTML = `<option value="">Select Owner</option>`;
+                managerNameDropdown.innerHTML = `<option value="">Select Manager</option>`;
+
+                const uniqueEnvironments = new Set();
+                const uniqueStatuses = new Set();
+                const uniqueOwners = new Set();
+                const uniqueManagers = new Set();
+
+                data.businessGroups.forEach(group => {
+                    const groupOption = document.createElement("option");
+                    groupOption.value = group.businessGroup;
+                    groupOption.textContent = group.businessGroup;
+                    businessGroupDropdown.appendChild(groupOption);
+
+                    group.environments.forEach(env => {
+                        const normalizedEnv = env.environment.toUpperCase(); // Normalize environment names
+                        uniqueEnvironments.add(normalizedEnv);
+
+                        env.apis.forEach(api => {
+                            uniqueStatuses.add(api.status);
+                            uniqueOwners.add(api.ownerName);
+                            uniqueManagers.add(api.managerName);
+                        });
+                    });
+                });
+
+                // Populate dropdowns with unique environments, statuses, owners, and managers
+                uniqueEnvironments.forEach(env => {
+                    const envOption = document.createElement("option");
+                    envOption.value = env;
+                    envOption.textContent = env;
+                    environmentDropdown.appendChild(envOption);
+                });
+
+                uniqueStatuses.forEach(status => {
+                    const statusOption = document.createElement("option");
+                    statusOption.value = status;
+                    statusOption.textContent = status;
+                    statusDropdown.appendChild(statusOption);
+                });
+
+                uniqueOwners.forEach(owner => {
+                    const ownerOption = document.createElement("option");
+                    ownerOption.value = owner;
+                    ownerOption.textContent = owner;
+                    ownerNameDropdown.appendChild(ownerOption);
+                });
+
+                uniqueManagers.forEach(manager => {
+                    const managerOption = document.createElement("option");
+                    managerOption.value = manager;
+                    managerOption.textContent = manager;
+                    managerNameDropdown.appendChild(managerOption);
+                });
+
+                console.log("Unique Environments:", uniqueEnvironments);
+            }
+
+            let totalApisCount = 0;
+            let environmentCounts = {}; // Initialize as an empty object
+            let productionApisCount = 0;
+            let nonProductionApisCount = 0;
+
+            function filterReport() {
+                if (!apiDataCache) {
+                    alert("Please load details first.");
+                    return;
+                }
+
+                document.getElementById("spinner").style.display = "block";
+                document.getElementById("filterReportBtn").disabled = true;
+
+                try {
+                    const selectedGroup = document.getElementById("businessGroup").value || "ALL";
+                    const selectedEnvironment = document.getElementById("environment").value || "ALL";
+                    const selectedStatus = document.getElementById("status").value || "ALL";
+                    const selectedOwner = document.getElementById("ownerName").value || "ALL";
+                    const selectedManager = document.getElementById("managerName").value || "ALL";
+
+                    // Reset counts and state
+                    allApis = [];
+                    const dynamicEnvironmentCounts = {};
+                    productionApisCount = 0;
+                    nonProductionApisCount = 0;
+                    totalApisCount = 0;
+
+                    // Reset pagination
+                    currentPage = 1;
+
+                    // Known production environment names (normalized to uppercase)
+                    const productionEnvNames = ["PROD", "PRODUCTION"];
+
+                    // Filter and count APIs
+                    apiDataCache.businessGroups.forEach(group => {
+                        if (selectedGroup === "ALL" || group.businessGroup === selectedGroup) {
+                            group.environments.forEach(env => {
+                                const normalizedEnv = env.environment.toUpperCase();
+                                const isEnvMatch = selectedEnvironment === "ALL" || normalizedEnv === selectedEnvironment.toUpperCase();
+
+                                env.apis.forEach(api => {
+                                    const isStatusMatch = selectedStatus === "ALL" || api.status === selectedStatus;
+                                    const isOwnerMatch = selectedOwner === "ALL" || api.ownerName === selectedOwner;
+                                    const isManagerMatch = selectedManager === "ALL" || api.managerName === selectedManager;
+
+                                    if (isEnvMatch && isStatusMatch && isOwnerMatch && isManagerMatch) {
+                                        allApis.push({
+                                            businessGroup: group.businessGroup,
+                                            environment: env.environment,
+                                            ...api,
+                                        });
+
+                                        // Increment total APIs count
+                                        totalApisCount++;
+
+                                        // Update dynamic environment counts
+                                        if (!dynamicEnvironmentCounts[normalizedEnv]) {
+                                            dynamicEnvironmentCounts[normalizedEnv] = 0;
+                                        }
+                                        dynamicEnvironmentCounts[normalizedEnv]++;
+
+                                        // Update production and non-production counts
+                                        if (productionEnvNames.includes(normalizedEnv)) {
+                                            productionApisCount++;
+                                        } else {
+                                            nonProductionApisCount++;
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+
+                    // Update global environment counts
+                    environmentCounts = dynamicEnvironmentCounts;
+
+                    // Handle empty results
+                    if (totalApisCount === 0) {
+                        alert("No APIs match the selected filters.");
+                        document.getElementById("report").style.display = "none";
+                        document.getElementById("spinner").style.display = "none";
+                        return;
+                    }
+
+                    // Render the report
+                    renderReport();
+
+                    document.getElementById("spinner").style.display = "none";
+                } catch (error) {
+                    console.error("Error generating report:", error);
+                    alert("Failed to generate the report.");
+                    document.getElementById("spinner").style.display = "none";
+                } finally {
+                    // Re-enable the filter button regardless of success or failure
+                    document.getElementById("filterReportBtn").disabled = false;
+                }
+            }
+
+            let sortColumnIndex = -1;  // To track the column index currently sorted
+
+            let sortOrder = 'asc';      // 'asc' for ascending, 'desc' for descending
+
+            function renderReport() {
+                // Calculate squad counts and their corresponding environments
+                let squadCounts = {};
+                let environmentApiCounts = {}; // Track total API counts for each environment
+
+                allApis.forEach(api => {
+                    const squad = api.squad || 'Unknown'; // Handle APIs with no squad specified
+                    const environment = api.environment ? api.environment.toUpperCase() : 'Unknown'; // Get the environment
+
+                    if (!squadCounts[squad]) {
+                        squadCounts[squad] = {
+                            count: 0,
+                            environments: new Set() // Use a Set to store unique environments
+                        };
+                    }
+                    squadCounts[squad].count++;
+                    squadCounts[squad].environments.add(environment); // Add the environment to the Set
+
+                    // Track total API counts per environment
+                    if (!environmentApiCounts[environment]) {
+                        environmentApiCounts[environment] = 0;
+                    }
+                    environmentApiCounts[environment]++;
+                });
+
+                const selectedGroup = document.getElementById("businessGroup").value || "ALL";
+                const selectedEnvironment = document.getElementById("environment").value || "ALL";
+                const selectedStatus = document.getElementById("status").value || "ALL";
+
+                const reportContent = document.getElementById("reportContent");
+
+                // Filtered environment counts (total API counts)
+                const filteredEnvironmentCounts = selectedEnvironment === "ALL"
+                    ? Object.fromEntries(
+                        Object.entries(environmentApiCounts).map(([env, count]) => [env, count])
+                    )
+                    : { [selectedEnvironment]: environmentApiCounts[selectedEnvironment] || 0 };
+
+                const showGeneralStats = selectedEnvironment === "ALL";
+
+                // Create a table for statistics
+                let statsContent = `
+                    <div class="stats-container">
+                        <h3>API Report Statistics</h3>
+                        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Metric</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Value</th>
+                                </tr>
+                         
+                            </thead>
+                            <tbody>
+                                ${showGeneralStats ? `<tr><td>Total APIs Count</td><td>${totalApisCount}</td></tr>` : ''}
+                                <tr><td>Production APIs Count</td><td>${productionApisCount}</td></tr>
+                                <tr><td>Non-Production APIs Count</td><td>${nonProductionApisCount}</td></tr>
+                            </tbody>
+                        </table>
+                       <h4>Environments</h4>
+                        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Environment</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(filteredEnvironmentCounts)
+                        .map(([key, count]) => `<tr><td>${key}</td><td>${count}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                        <h4>Squad Summary</h4>
+                        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Squad</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Environments</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left;">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(squadCounts).map(([squad, data]) => {
+                            // Calculate environment counts dynamically for each squad
+                            const environmentsWithCounts = Array.from(data.environments)
+                                .map(env => {
+                                    // Count the occurrences of this squad in this specific environment
+                                    const envCount = allApis.filter(api => api.squad === squad && api.environment.toUpperCase() === env).length;
+                                    return `${env}(${envCount})`;
+                                })
+                                .join(', ');
+                            return `<tr><td>${squad}</td><td>${environmentsWithCounts}</td><td>${data.count}</td></tr>`;
+                        }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                // Sort the APIs based on the selected column and direction
+                const sortedApis = [...allApis].sort((a, b) => {
+                    if (sortColumnIndex === -1) return 0; // No sorting applied
+
+                    const columns = ['businessGroup', 'environment', 'assetId', 'status', 'id', 'assetVersion', 'policies', 'automatedPolicies', 'NumberOfClientApplications', 'clientApps'];
+                    const column = columns[sortColumnIndex];
+                    let valueA = a[column];
+                    let valueB = b[column];
+
+                    if (typeof valueA === 'string') {
+                        valueA = valueA.toLowerCase();
+                        valueB = valueB.toLowerCase();
+                    }
+
+                    if (sortOrder === 'asc') {
+                        return valueA > valueB ? 1 : (valueA < valueB ? -1 : 0);
+                    } else {
+                        return valueA < valueB ? 1 : (valueA > valueB ? -1 : 0);
+                    }
+                });
+
+                // Pagination logic
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, sortedApis.length);
+
+                let content = statsContent + `<div style="overflow-x: auto;"><table style="width: 100%; table-layout: auto; word-wrap: break-word;">
+                    <thead>
+                        <tr>
+                            <th style="white-space : nowrap; text-align:center;" onclick="sortTable(0)">Business Group&nbsp;&nbsp;<i class="fa-solid fa-sort"></i></th>
+                            <th style="white-space: nowrap; text-align:center;" onclick="sortTable(1)">Environment&nbsp;&nbsp;<i class="fa-solid fa-sort"></i></th>
+                            <th style="white-space: nowrap; text-align:center;" onclick="sortTable(2)">API Name&nbsp;&nbsp;<i class="fa-solid fa-sort"></i></th>
+                            <th style="white-space: nowrap; text-align:center;">Owner Name</th>
+                            <th style="white-space: nowrap; text-align:center;">Manager Name</th>
+                            <th style="white-space: nowrap; text-align:center;">Status</th>  
+                            <th style="white-space: nowrap; text-align:center;">ID</th>
+                            <th style="white-space: nowrap; text-align:center;">Asset Version</th>
+                            <th style="white-space: nowrap; text-align:center;">Policies</th>
+                            <th style="white-space: nowrap; text-align:center;">Automated Policies</th>
+                            <th style="white-space: nowrap; text-align:center;">Number of Client Applications</th>
+                            <th style="white-space: nowrap; text-align:center;">Client Applications</th>
+                            <th style="white-space: nowrap; text-align:center;">Squad</th>
+                            <th style="white-space: nowrap; text-align:center;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                sortedApis.slice(startIndex, endIndex).forEach(api => {
+                    const clientAppsCount = api.NumberOfClientApplications || 0;
+                    const clientAppDetails = api.clientApps?.length
+                        ? api.clientApps.map(clientApp => `
+                            <span>${clientApp.clientAppName}
+                                <button class="icon-button" onclick="viewClientAppDetails(${clientApp.id})">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                            </span>`).join(", ")
+                        : "No Details";
+
+                    content += `
+                        <tr>
+                            <td style ="white-space: nowrap; text-align:center;">${api.businessGroup}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.environment}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.assetId}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.ownerName || 'No Owner'}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.managerName}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.status}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.id}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.assetVersion}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.policies.length > 0 ? `<ul>` + api.policies.map(policy => `
+                                <li style="white-space: nowrap ; overflow: hidden; text-overflow: ellipsis;">
+                                    ${policy.template.assetId}
+                                    <button class="icon-button" onclick="viewPolicyDetails(${policy.policyId})"><i class="fa fa-info-circle"></i></button>
+                                </li>`).join('') + `</ul>` : 'None'}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.automatedPolicies.length > 0 ? `<ul>` + api.automatedPolicies.map(policy => `
+                                <li style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${policy.assetId}
+                                    <button class="icon-button" onclick="viewAutomatedPolicyDetails(${policy.id})"><i class="fa fa-info-circle"></i></button>
+                                </li>`).join('') + `</ul>` : 'None'}</td>
+                            <td style="white-space: nowrap; text-align:center;">${clientAppsCount}</td>
+                            <td style="white-space: nowrap; text-align:center;">${clientAppDetails}</td>
+                            <td style="white-space: nowrap; text-align:center;">${api.squad || 'No Squad'}</td>
+                            <td style="white-space: nowrap; text-align:center;"><button onclick="viewDetails('${api.environment}', '${api.assetId}')"><i class="fa-solid fa-eye"></i></button></td>
+                        </tr>`;
+                });
+
+                content += `</tbody></table></div>`;
+                reportContent.innerHTML = content;
+
+                // Render pagination
+                renderPagination(sortedApis.length);
+
+                // Display the report
+                document.getElementById("report").style.display = "block";
+            }
+
+            // Function to handle sorting
+            function sortTable(columnIndex) {
+                // If the same column is clicked again, toggle the sort order
+                if (sortColumnIndex === columnIndex) {
+                    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortColumnIndex = columnIndex;
+                    sortOrder = 'asc'; // Reset to ascending for new column
+                }
+
+                // Re-render the report with the new sorting order
+                renderReport();
+            }
+
+            function syncScroll() {
+                const topScroll = document.querySelector(".top-scroll");
+                const reportContent = document.getElementById("reportContent");
+
+                topScroll.scrollLeft = reportContent.scrollLeft;
+                topScroll.onscroll = () => {
+                    reportContent.scrollLeft = topScroll.scrollLeft;
+                };
+                reportContent.onscroll = () => {
+                    topScroll.scrollLeft = reportContent.scrollLeft;
+                };
+            }
+
+            function renderPagination(totalItems) {
+                const pagination = document.getElementById("pagination");
+                pagination.innerHTML = ""; // Clear previous pagination
+
+                const totalPages = Math.ceil(totalItems / pageSize);
+                const maxVisibleButtons = 5;
+
+                // Create "Previous" button
+                const prevButton = document.createElement("button");
+                prevButton.textContent = "Previous";
+                prevButton.disabled = currentPage === 1;
+                prevButton.addEventListener("click", () => changePage(currentPage - 1));
+                pagination.appendChild(prevButton);
+
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+
+                if (endPage - startPage + 1 < maxVisibleButtons) {
+                    startPage = Math.max(1, endPage - maxVisibleButtons + 1);
+                }
+
+                if (startPage > 1) {
+                    const firstPageButton = document.createElement("button");
+                    firstPageButton.textContent = "1";
+                    firstPageButton.addEventListener("click", () => changePage(1));
+                    pagination.appendChild(firstPageButton);
+
+                    if (startPage > 2) {
+                        const ellipsis = document.createElement("span");
+                        ellipsis.textContent = "...";
+                        pagination.appendChild(ellipsis);
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageButton = document.createElement("button");
+                    pageButton.textContent = i;
+                    pageButton.disabled = i === currentPage;
+                    pageButton.classList.toggle("active", i === currentPage);
+                    pageButton.addEventListener("click", () => changePage(i));
+                    pagination.appendChild(pageButton);
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const ellipsis = document.createElement("span");
+                        ellipsis.textContent = "...";
+                        pagination.appendChild(ellipsis);
+                    }
+
+                    const lastPageButton = document.createElement("button");
+                    lastPageButton.textContent = totalPages;
+                    lastPageButton.addEventListener("click", () => changePage(totalPages));
+
+                    pagination.appendChild(lastPageButton);
+                }
+
+                const nextButton = document.createElement("button");
+                nextButton.textContent = "Next";
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.addEventListener("click", () => changePage(currentPage + 1));
+                pagination.appendChild(nextButton);
+            }
+
+            function changePage(pageNumber) {
+    const totalPages = Math.ceil((filteredApis.length || allApis.length) / pageSize);
+
+    if (pageNumber < 1 || pageNumber > totalPages) {
+        console.error("Invalid page number:", pageNumber);
+        return; // Prevent navigation outside valid page range
+    }
+
+    currentPage = pageNumber;
+
+    // Render based on whether filtered results exist
+    if (filteredApis.length > 0) {
+        renderFilteredReport(false);
+    } else {
+        renderReport();
+    }
+
+    // Update active button styling
+    const buttons = document.querySelectorAll("#pagination button");
+    buttons.forEach((button) => {
+        button.classList.toggle("active", button.textContent == pageNumber);
+    });
+}
+
+            // Updated Function for Viewing Details
+            function viewDetails(environment, assetId) {
+                document.getElementById("spinner").style.display = "block";
+
+                const apiDetails = allApis.find(api => api.environment === environment && api.assetId === assetId);
+
+                if (apiDetails) {
+                    const detailsContent = document.getElementById("detailsContent");
+
+                    // Build dynamic details for the modal popup
+                    const policies = apiDetails.policies.map(policy => `
+                        <div>
+                            <strong>Policy ID:</strong> ${policy.policyId}<br>
+                            <strong>Type:</strong> ${policy.type}<br>
+                            <strong>Template Asset ID:</strong> ${policy.template.assetId}<br>
+                            <strong>Configuration:</strong> <pre>${JSON.stringify(policy.configuration, null, 2)}</pre>
+                        </div>
+                    `).join('');
+
+                    const automatedPolicies = apiDetails.automatedPolicies.map(policy => `
+                        <div>
+                            <strong>Automated Policy ID:</strong> ${policy.id}<br>
+                            <strong>Asset ID:</strong> ${policy.assetId}<br>
+                            <strong>Configuration Data:</strong> <pre>${JSON.stringify(policy.configurationData, null, 2)}</pre>
+                        </div>
+                    `).join('');
+
+                    const clientApps = apiDetails.clientApps && Array.isArray(apiDetails.clientApps) && apiDetails.clientApps.length > 0
+    ? `<ul>${apiDetails.clientApps.map(app => `
+        <li>
+            <strong>ID:</strong> ${app.id}<br>
+            <strong>Client App Name:</strong> ${app.clientAppName}<br>
+            <strong>Owner:</strong> ${app.owner}<br>
+            <strong>Email:</strong> ${app.email}<br>
+            <strong>Client ID:</strong> ${app.clientId}<br>
+            <strong>Client Secret:</strong> ${app.clientSecret}
+        </li>`).join('')}</ul>`
+    : 'No Client Applications';
+
+                    detailsContent.innerHTML = `
+                        <h2>API Details</h2>
+                        <p><strong>Business Group:</strong> ${apiDetails.businessGroup}</p>
+                        <p><strong>Environment:</strong> ${apiDetails.environment}</p>
+                        <p><strong>API Name:</strong> ${apiDetails.assetId}</p>
+                        <p><strong>Status:</strong> ${apiDetails.status}</p>
+                        <p><strong>ID:</strong> ${apiDetails.id}</p>
+                        <p><strong>Asset Version:</strong> ${apiDetails.assetVersion}</p>
+                        <h3>Policies</h3>
+                        ${policies || '<p>No Policies Available</p>'}
+                        <h3>Automated Policies</h3>
+                        ${automatedPolicies || '<p>No Automated Policies Available</p>'}
+                        <h3>Owner</h3>
+                        <p>${apiDetails.ownerName || 'No Owner'}</p>
+                        <h3>Manager</h3>
+                        <p>${apiDetails.managerName || 'No Manager'}</p>
+                        <h3>Squad </h3>
+                        <p><strong>Squad:</strong> ${apiDetails.squad || 'No Squad'}</p>
+                        <h3>Client Applications</h3>
+                        <p><strong>NumberOfClientApplications:</strong> ${apiDetails.NumberOfClientApplications || 0}</p>
+                        <p><strong>clientApps:</strong> ${clientApps}</p>
+                    `;
+
+                    document.getElementById("spinner").style.display = "none";
+                    const modal = document.getElementById("detailsModal");
+                    modal.style.display = "flex";
+                } else {
+                    console.error("API details not found.");
+                    alert("Details not found for this API.");
+                    document.getElementById("spinner").style.display = "none";
+                }
+            }
+
+            let squadCounts = {};
+
+            function calculateSquadCounts() {
+                // Reset the squad counts
+                squadCounts = {};
+
+                // Count squads
+                allApis.forEach(api => {
+                    const squad = api.squad || 'Unknown'; // Handle APIs with no squad specified
+                    if (!squadCounts[squad]) {
+                        squadCounts[squad] = 0;
+                    }
+                    squadCounts[squad]++;
+                });
+            }
+
+            function viewPolicyDetails(policyId) {
+                document.getElementById("spinner").style.display = "block";
+
+                // Find the policy details by policyId
+                const api = allApis.find(api =>
+                    api.policies.some(policy => policy.policyId === policyId)
+                );
+
+                if (api) {
+                    const policyDetails = api.policies.find(policy => policy.policyId === policyId);
+
+                    const detailsContent = document.getElementById("detailsContent");
+                    detailsContent.innerHTML = `
+            <h2>Policy Details</h2>
+            <p><strong>Policy ID:</strong> ${policyDetails.policyId}</p>
+            <p><strong>Type:</strong> ${policyDetails.type}</p>
+            <p><strong>Order:</strong> ${policyDetails.order}</p>
+            <h3>Template</h3>
+            <p><strong>Asset ID:</strong> ${policyDetails.template.assetId}</p>
+            <p><strong>Asset Version:</strong> ${policyDetails.template.assetVersion}</p>
+            <p><strong>Group ID:</strong> ${policyDetails.template.groupId}</p>
+            <h3>Configuration</h3>
+            <pre>${JSON.stringify(policyDetails.configuration, null, 2)}</pre>
+        `;
+
+                    document.getElementById("spinner").style.display = "none";
+                    const modal = document.getElementById("detailsModal");
+                    modal.style.display = "flex";
+                } else {
+                    console.error("Policy details not found.");
+                    alert("Policy details not found.");
+                    document.getElementById("spinner").style.display = "none";
+                }
+            }
+
+            function viewAutomatedPolicyDetails(policyId) {
+                document.getElementById("spinner").style.display = "block";
+
+                // Find the automated policy details by policyId
+                const api = allApis.find(api =>
+                    api.automatedPolicies.some(policy => policy.id === policyId)
+                );
+
+                if (api) {
+                    const automatedPolicyDetails = api.automatedPolicies.find(policy => policy.id === policyId);
+
+                    const detailsContent = document.getElementById("detailsContent");
+                    detailsContent.innerHTML = `
+            <h2>Automated Policy Details</h2>
+            <p><strong>ID:</strong> ${automatedPolicyDetails.id}</p>
+            <p><strong>Asset ID:</strong> ${automatedPolicyDetails.assetId}</p>
+            <p><strong>Asset Version:</strong> ${automatedPolicyDetails.assetVersion}</p>
+            <p><strong>Order:</strong> ${automatedPolicyDetails.order}</p>
+            <h3>Configuration Data</h3>
+            <pre>${JSON.stringify(automatedPolicyDetails.configurationData, null, 2)}</pre>
+            <h3>Implementation Assets</h3>
+            <ul>
+                ${automatedPolicyDetails.implementationAssets
+                            .map(asset => `
+                        <li>
+                            <strong>Name:</strong> ${asset.name}<br>
+                            <strong>Version:</strong> ${asset.version}<br>
+                            <strong>Technology:</strong> ${asset.technology}<br>
+                            <strong>Release Notes:</strong> ${asset.releaseNotes || 'None'}
+                        </li>
+                    `)
+                            .join('')}
+
+            </ul>
+        `;
+
+                    document.getElementById("spinner").style.display = "none";
+                    const modal = document.getElementById("detailsModal");
+                    modal.style.display = "flex";
+                } else {
+                    console.error("Automated policy details not found.");
+                    alert("Automated policy details not found.");
+                    document.getElementById("spinner").style.display = "none";
+                }
+           
+            }
+
+            function viewClientAppDetails(clientAppId) {
+                document.getElementById("spinner").style.display = "block";
+
+                // Find the client application details by clientAppId
+                const clientApp = allApis.flatMap(api => api.clientApps).find(app => app.id === clientAppId);
+
+                if (clientApp) {
+                    const detailsContent = document.getElementById("detailsContent");
+                    detailsContent.innerHTML = `
+                        <h2>Client Application Details</h2>
+                        <p><strong>Client Application Name:</strong> ${clientApp.clientAppName}</p>
+                        <p><strong>Owner:</strong> ${clientApp.owner}</p>
+                        <p><strong>Email:</strong> ${clientApp.email}</p>
+                        <p><strong>Client ID:</strong> ${clientApp.clientId}</p>
+                        <p><strong>Client Secret:</strong> ${clientApp.clientSecret}</p>
+                    `;
+
+                    document.getElementById("spinner").style.display = "none";
+                    const modal = document.getElementById("detailsModal");
+                    modal.style.display = "flex";
+                } else {
+                    console.error("Client application details not found.");
+                    alert("Client application details not found.");
+                    document.getElementById("spinner").style.display = "none";
+                }
+            }
+
+            let filteredApis = []; // To store the filtered results globally
+            let debounceTimeout;
+            function searchApplications() {
+                const query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+                if (query.length < 2) {
+                    console.log("Please enter at least 2 characters to search.");
+                    return;
+                }
+
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    console.log("Search Query:", query);
+
+                    if (!allApis || allApis.length === 0) {
+                        console.error("No data available to search. Please load data first.");
+                        return;
+                    }
+
+                    currentPage = 1; // Reset to the first page for search results
+
+                    // Filter the APIs
+                    filteredApis = allApis.filter(api => {
+                        const matchesApiName = api.assetId?.toLowerCase().includes(query);
+                        const matchesPolicies = api.policies?.some(policy =>
+                            policy.template?.assetId?.toLowerCase().includes(query)
+                        );
+                        const matchesAutomatedPolicies = api.automatedPolicies?.some(policy =>
+                            policy.assetId?.toLowerCase().includes(query)
+                        );
+                        const matchesManagerName = api.managerName?.toLowerCase().includes(query);
+                        const matchesOwnerName = api.ownerName?.toLowerCase().includes(query);
+                        const matchesStatus = api.status?.toLowerCase().includes(query);
+                        const matchesBusinessGroup = api.businessGroup?.toLowerCase().includes(query);
+                        const matchesEnvironment = api.environment?.toLowerCase().includes(query);
+                        const matchesSquad = api.squad?.toLowerCase().includes(query);
+
+                        return (
+                            matchesApiName ||
+                            matchesPolicies ||
+                            matchesAutomatedPolicies ||
+                            matchesManagerName ||
+                            matchesOwnerName ||
+                            matchesStatus ||
+                            matchesBusinessGroup ||
+                            matchesEnvironment ||
+                            matchesSquad
+                        );
+                    });
+
+                    console.log("Filtered APIs:", filteredApis);
+
+                    // Render the search results with pagination
+                    renderFilteredReport(false);
+                }, 500); // Debounce for 500ms
+            }
+
+            function renderFilteredReport(disablePagination) {
+                const reportContent = document.getElementById("reportContent");
+                const paginationContainer = document.getElementById("pagination");
+
+                // If no results match the search
+                if (!filteredApis || filteredApis.length === 0) {
+                    reportContent.innerHTML = "<p>No results found for your search query.</p>";
+                    paginationContainer.style.display = "none"; // Hide pagination
+                    document.getElementById("report").style.display = "block";
+                    return;
+                }
+
+                // Use pageSize for items per page
+                const itemsPerPage = disablePagination ? filteredApis.length : pageSize;
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, filteredApis.length);
+
+                // Generate the HTML content for the table
+                let content = `<div style="overflow-x: auto;"><table style="width: 100%; table-layout: auto; word-wrap: break-word;">
+        <thead>
+            <tr>
+                <th>Business Group</th>
+                <th>Environment</th>
+                <th>API Name</th>
+                <th>Owner Name</th>
+                <th>Manager Name</th>
+                <th>Status</th>
+                <th>ID</th>
+                <th>Asset Version</th>
+                <th>Policies</th>
+                <th>Automated Policies</th>
+                <th>Number of Client Applications</th>
+                <th>Client Applications</th>
+                <th>Squad</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+                // Populate rows based on filtered APIs
+                filteredApis.slice(startIndex, endIndex).forEach(api => {
+                    const policies = api.policies?.length
+                        ? api.policies
+                            .map(policy => `
+                      <span>${policy.template?.assetId || "N/A"}
+                          <button class="icon-button" onclick="viewPolicyDetails(${policy.policyId})">
+                              <i class="fa fa-info-circle"></i>
+                          </button>
+                      </span>`)
+                            .join(", ")
+                        : "None";
+
+                    const automatedPolicies = api.automatedPolicies?.length
+                        ? api.automatedPolicies
+                            .map(policy => `
+                      <span>${policy.assetId || "N/A"}
+                          <button class="icon-button" onclick="viewAutomatedPolicyDetails(${policy.id})">
+                              <i class="fa fa-info-circle"></i>
+                          </button>
+                      </span>`)
+                            .join(", ")
+                        : "None";
+                    const clientAppsCount = api.NumberOfClientApplications || 0;
+                    const clientAppDetails = api.clientApps?.length
+                        ? api.clientApps.map(clientApp => `
+                            <span>${clientApp.clientAppName}
+                                <button class="icon-button" onclick="viewClientAppDetails(${clientApp.id})">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                            </span>`).join(", ")
+                        : "No Details";
+
+                    content += `
+            <tr>
+                <td>${api.businessGroup || "N/A"}</td>
+                <td>${api.environment || "N/A"}</td>
+                <td>${api.assetId || "N/A"}</td>
+                <td>${api.ownerName || "No Owner"}</td>
+                <td>${api.managerName || "No Manager"}</td>
+                <td>${api.status || "N/A"}</td>
+                <td>${api.id || "N/A"}</td>
+                <td>${api.assetVersion || "N/A"}</td>
+                <td>${policies}</td>
+                <td>${automatedPolicies}</td>
+                <td>${clientAppsCount}</td>
+                <td>${clientAppDetails}</td>
+                <td>${api.squad || "No Squad"}</td>
+                <td>
+                    <button onclick="viewDetails('${api.environment}', '${api.assetId}')">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </td>
+            </tr>`;
+                });
+
+                content += `</tbody></table></div>`;
+                reportContent.innerHTML = content;
+
+                // Handle pagination
+                if (disablePagination) {
+                    paginationContainer.style.display = "none"; // Hide pagination for dynamic page sizes
+                } else {
+                    paginationContainer.style.display = "flex"; // Show pagination for normal use
+                    renderPagination(filteredApis.length); // Pass total items
+                }
+
+                // Show the report
+                document.getElementById("report").style.display = "block";
+            }
+        </script>
+    </div>
+</body>
+
+</html>

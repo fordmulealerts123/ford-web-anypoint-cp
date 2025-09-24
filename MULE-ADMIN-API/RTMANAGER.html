@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vCore Allocation Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'PlacardNextRegular', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1CBADE;
+            color: rgb(12, 12, 12);
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            margin: 0 auto;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 20px;
+            color: white;
+        }
+
+        #searchBarContainer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #searchInput {
+            font-family: Oswald;
+            flex-grow: 1;
+            max-width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #searchButton {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: white;
+            color: #4553a9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #searchButton:hover {
+            background-color: #4553a9;
+        }
+
+        select,
+        button {
+            font-family: Oswald;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            color: #1b216b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background-color: white;
+            color: #1B216B;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #4553a9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border-top: 6px solid #b6dad2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .button-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.home-button, .back-button {
+    background-color: white;
+    color: #1B216B;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-button:hover, .back-button:hover {
+    background-color: #4553a9;
+    color: white;
+}
+
+
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            max-width: 1200px;
+            background-color: #f4f4f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            table-layout: auto;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+            white-space: nowrap;
+            /* Prevent text wrapping */
+        }
+
+        th {
+            background-color: #1b216b;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .status-started {
+            color: green;
+        }
+
+        .status-undepolyed {
+            color: red;
+        }
+
+        .status-deployed {
+            color: #e67e22;
+        }
+
+        /* Pagination Styling */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: white;
+            color: #1B216B;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background-color: #4553a9;
+        }
+
+        .pagination button[disabled] {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Scrollable Table */
+        .scrollable-table {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+            /* Enable horizontal scrolling */
+            margin-bottom: 20px;
+        }
+
+        /* Report Section */
+        #report {
+            display: none;
+            margin: 20px auto;
+            max-width: 1700px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            margin: 0;
+        }
+
+        button {
+            font-size: normal;
+        }
+
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 5px;
+            }
+
+            #searchBarContainer {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            #searchInput {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+
+            #pagination button {
+                padding: 5px 10px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            #controls label {
+                font-size: 16px;
+            }
+
+            #searchInput {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            #searchButton {
+                padding: 8px;
+            }
+
+            th,
+            td {
+                font-size: 10px;
+                padding: 5px;
+            }
+
+            table {
+                max-width: 100%;
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        /* Wrapper for horizontal scrollbars */
+        .table-scroll-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            /* Space between scrollbars and the table */
+        }
+
+        .table-scroll-wrapper .scrollbar {
+            overflow-x: auto;
+            /* Enable horizontal scrolling */
+        }
+
+        .table-scroll-wrapper .scrollbar::-webkit-scrollbar {
+            height: 8px;
+            /* Style the scrollbar for better visibility */
+        }
+
+        .table-scroll-wrapper .scrollbar::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+        /* Ensure table fits within scrollable area */
+        .table-scroll-wrapper table {
+            width: 1000px;
+            /* Minimum table width to trigger scrolling */
+        }
+
+        /* Responsiveness: Adjust behavior for smaller screens */
+        @media (max-width: 768px) {
+            .table-scroll-wrapper table {
+                width: 1000px;
+                /* Maintain fixed width for smaller screens */
+            }
+        }
+
+        .fa-sort-up,
+        .fa-sort-down {
+            margin-left: 5px;
+        }
+
+        #emailInput {
+            font-family: Oswald;
+            flex-grow: 1;
+            max-width: 400px;
+            /* Increase the max-width */
+            padding: 12px;
+            /* Increase padding for a larger feel */
+            font-size: 18px;
+            /* Increase font size */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+            /* Smooth transition for border color */
+        }
+
+        #emailInput:focus {
+            border-color: #1b216b;
+            /* Change border color on focus */
+            outline: none;
+            /* Remove default outline */
+        }
+
+        #reportControls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            /* Space below the controls */
+        }
+    </style>
+</head>
+
+<body style="font-family: 'Oswald', sans-serif;">
+    <div class="button-container">
+        
+        <button class="back-button" onclick="window.location.href='../index.html'">
+            <i class="fa-solid fa-chevron-left"></i> BACK
+        </button>
+    </div>
+    <h1>vCore Allocation Report</h1>
+
+    <div id="controls">
+        <div>
+            <label for="businessGroup">Business Group:</label>
+            <select id="businessGroup">
+                <option value="">Select Business Group</option>
+            </select>
+        </div>
+        <div>
+            <label for="environment">Environment:</label>
+            <select id="environment">
+                <option value="">Select Environment</option>
+            </select>
+        </div>
+        <div>
+            <label for="status">Status:</label>
+            <select id="status">
+                <option value="">Select Status</option>
+            </select>
+        </div>
+        <div>
+            <label for="ownerName">Owner Name:</label>
+            <select id="ownerName">
+                <option value="">Select Owner Name</option>
+            </select>
+        </div>
+        <div>
+            <label for="managerName">Manager Name:</label>
+            <select id="managerName">
+                <option value="">Select Manager Name</option>
+            </select>
+        </div>
+        <div>
+            <label for="squadName">Squad Name:</label>
+            <select id="squadName">
+                <option value="">Select Squad Name</option>
+            </select>
+        </div>
+        <div>
+            <button id="loadDataBtn"><i class="fa-solid fa-circle-notch"></i> LOAD DETAILS</button>
+            <button id="filterReportBtn" disabled><i class="fa-solid fa-scroll"></i> LOAD REPORT</button>
+        </div>
+        <div id="searchBarContainer">
+            <input type="text" id="searchInput" placeholder="Give min 2 characters" oninput="searchApplications()"
+                style="max-width: 300px;">
+            <button id="searchButton"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div>
+            <button id="sendEmailButton" disabled><i class="fa-regular fa-paper-plane"></i> SEND EMAIL</button>
+
+        </div>
+    </div>
+
+    <div id="spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="report">
+        <div id="reportControls">
+            <label for="emailInput">Email:</label>
+            <input type="email" id="emailInput" placeholder="Enter email address" style="max-width: 400px;">
+            <button id="sendFullReportButton" disabled><i class="fa-regular fa-paper-plane"></i> SEND FULL
+                REPORT</button>
+        </div>
+        <div id="reportContent"></div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+         let isFirstLoadReport = true; // Flag to track the first click of "Load Report"
+        const BASE_URL = "http://mule-admin-api-ford.us-e2.cloudhub.io";
+        // const BASE_URL = "http://localhost:8081";
+        const apiUrl = `${BASE_URL}/api/platform-metrics/runtime-manager/runtime-vcore-allocation`;
+        const pageSize = 5;
+        let allApis = [];
+        let currentPage = 1;
+        let environmentVcores = {};
+        let cachedData = null; // Cache the fetched data
+
+        document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loadDataBtn").addEventListener("click", loadData);
+    document.getElementById("filterReportBtn").addEventListener("click", loadReportWithDefaults);
+    const sendEmailButton = document.getElementById("sendEmailButton");
+    const sendFullReportButton = document.getElementById("sendFullReportButton");
+    const ownerDropdown = document.getElementById("ownerName");
+    const managerDropdown = document.getElementById("managerName");
+    const emailInput = document.getElementById("emailInput");
+
+    // Enable/Disable button based on owner, manager, or email input
+    function updateButtonState() {
+        const ownerSelected = ownerDropdown.value !== "";
+        const managerSelected = managerDropdown.value !== "";
+        const emailEntered = emailInput.value.trim() !== "";
+
+        sendEmailButton.disabled = !(ownerSelected || managerSelected);
+        sendFullReportButton.disabled = !(ownerSelected || managerSelected || emailEntered); // Enable if any field is filled
+    }
+
+    ownerDropdown.addEventListener("change", updateButtonState);
+    managerDropdown.addEventListener("change", updateButtonState);
+    emailInput.addEventListener("input", updateButtonState); // Add this line to check email input
+
+    sendEmailButton.addEventListener("click", () => {
+        const ownerName = ownerDropdown.value.trim();
+        const managerName = managerDropdown.value.trim();
+
+        if (!ownerName && !managerName) {
+            alert("Please select at least one: Owner or Manager.");
+            return;
+        }
+
+        // Construct query parameters dynamically
+        let queryParams = "controlPlane=arm";
+        if (ownerName) queryParams += `&ownerName=${encodeURIComponent(ownerName)}`;
+        if (managerName) queryParams += `&managerName=${encodeURIComponent(managerName)}`;
+
+        // Construct the API URL
+        const emailApiUrl = `${BASE_URL}/api/platform-metrics/send-report?${queryParams}`;
+
+        // Send request
+        fetch(emailApiUrl, { method: "GET" }) // Using GET as per your updated URL
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("API Response:", data);
+                alert("Email sent successfully!");
+            })
+            .catch(error => {
+                console.error("Error sending email:", error);
+                alert(`Failed to send email: ${error.message}`);
+            });
+    });
+
+    // New functionality for sending full report
+    sendFullReportButton.addEventListener("click", () => {
+        const ownerName = ownerDropdown.value.trim();
+        const managerName = managerDropdown.value.trim();
+        const email = emailInput.value.trim(); // Get the email input value
+
+        // Check if at least one of the fields is filled
+        if (!ownerName && !managerName && !email) {
+            alert("Please select at least one: Owner, Manager, or enter an Email.");
+            return;
+        }
+
+        // Construct query parameters dynamically
+        let queryParams = `controlPlane=arm`;
+        if (ownerName) queryParams += `&ownerName=${encodeURIComponent(ownerName)}`;
+        if (managerName) queryParams += `&managerName=${encodeURIComponent(managerName)}`;
+        if (email) queryParams += `&email=${encodeURIComponent(email)}`; // Add email to query parameters
+
+        // Construct the API URL
+        const fullReportApiUrl = `${BASE_URL}/api/platform-metrics/full-report?${queryParams}`;
+
+        // Send request
+        fetch(fullReportApiUrl, { method: "GET" }) // Using GET as per your updated URL
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("API Response:", data);
+                alert("Full report sent successfully!");
+            })
+            .catch(error => {
+                console.error("Error sending full report:", error);
+                alert(`Failed to send full report: ${error.message}`);
+            });
+    });
+});
+        function showSpinner() {
+            document.getElementById("spinner").style.display = "block";
+        }
+
+        function hideSpinner() {
+            document.getElementById("spinner").style.display = "none";
+        }
+
+        function loadData() {
+            showSpinner();
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    cachedData = data; // Cache the fetched data
+                    populateDropdowns(data); // Populate dropdowns dynamically
+                    document.getElementById("loadDataBtn").style.display = "none"; // Hide the LOAD DETAILS button
+                    document.getElementById("filterReportBtn").style.display = "inline-block"; // Show the LOAD REPORT button
+                    alert("Data loaded successfully.");
+                })
+                .catch(error => {
+                    console.error("Error loading initial data:", error);
+                    alert("Failed to load data. Please try again later.");
+                })
+                .finally(() => {
+                    hideSpinner();
+                });
+        }
+
+        function populateDropdowns(data) {
+            const businessGroupDropdown = document.getElementById("businessGroup");
+            const environmentDropdown = document.getElementById("environment");
+            const statusDropdown = document.getElementById("status");
+            const ownerNameDropdown = document.getElementById("ownerName");
+            const managerNameDropdown = document.getElementById("managerName");
+            const squadNameDropdown = document.getElementById("squadName");
+
+            // Clear existing options
+            businessGroupDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+            environmentDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+            statusDropdown.innerHTML = `<option value="ALL">ALL</option>`;
+            ownerNameDropdown.innerHTML = `<option value="">Select Owner</option>`;
+            managerNameDropdown.innerHTML = `<option value="">Select Manager</option>`;
+            squadNameDropdown.innerHTML = `<option value="">Select Squad Name</option>`;
+
+            const businessGroups = data.businessGroups || [];
+            const environments = new Set();
+            const statuses = new Set();
+            const owners = new Set();
+            const managers = new Set();
+            const squads = new Set(); // New set for squads
+
+            // Populate dropdowns
+            businessGroups.forEach(group => {
+                const option = document.createElement("option");
+                option.value = group.businessGroup;
+                option.textContent = group.businessGroup;
+                businessGroupDropdown.appendChild(option);
+
+                group.environments.forEach(env => {
+                    environments.add(env.environment);
+                    env.apis.forEach(api => {
+                        statuses.add(api.status);
+                        owners.add(api.ownerName);
+                        managers.add(api.managerName);
+                        if (api.squad) { // Add squad to the set
+                            squads.add(api.squad);
+                        }
+                    });
+                });
+            });
+
+            Array.from(environments).forEach(env => {
+                const option = document.createElement("option");
+                option.value = env;
+                option.textContent = env;
+                environmentDropdown.appendChild(option);
+            });
+
+            Array.from(statuses).forEach(status => {
+                const option = document.createElement("option");
+                option.value = status;
+                option.textContent = status;
+                statusDropdown.appendChild(option);
+            });
+
+            Array.from(owners).forEach(owner => {
+                const option = document.createElement("option");
+                option.value = owner;
+                option.textContent = owner;
+                ownerNameDropdown.appendChild(option);
+            });
+
+            Array.from(managers).forEach(manager => {
+                const option = document.createElement("option");
+                option.value = manager;
+                option.textContent = manager;
+                managerNameDropdown.appendChild(option);
+            });
+
+            Array.from(squads).forEach(squad => { // Populate squad dropdown
+                const option = document.createElement("option");
+                option.value = squad;
+                option.textContent = squad;
+                squadNameDropdown.appendChild(option);
+            });
+
+            document.getElementById("filterReportBtn").disabled = false; // Enable LOAD REPORT button
+        }
+
+        function loadReportWithDefaults() {
+            showSpinner(); // Start showing the spinner when "Load Report" is clicked
+
+            if (isFirstLoadReport) {
+                // On the first click, set dropdowns to "ALL"
+                document.getElementById("businessGroup").value = "ALL";
+                document.getElementById("environment").value = "ALL";
+                document.getElementById("status").value = "ALL";
+                document.getElementById("ownerName").value = "ALL";
+                document.getElementById("managerName").value = "ALL";
+                document.getElementById("squadName").value = "ALL"; // Set squad to ALL
+
+                isFirstLoadReport = false; // Set flag to false after the first click
+            }
+
+            // Get the currently selected values from the dropdowns
+            const selectedGroup = document.getElementById("businessGroup").value || "ALL";
+            const selectedEnvironment = document.getElementById("environment").value || "ALL";
+            const selectedStatus = document.getElementById("status").value || "ALL";
+            const selectedOwner = document.getElementById("ownerName").value || "ALL";
+            const selectedManager = document.getElementById("managerName").value || "ALL";
+            const selectedSquad = document.getElementById("squadName").value || "ALL"; // Get selected squad
+
+            if (cachedData) {
+                // If cached data exists, directly process and render the report
+                processAndRenderReport(cachedData, selectedGroup, selectedEnvironment, selectedStatus, selectedOwner, selectedManager, selectedSquad);
+                hideSpinner(); // Stop showing the spinner once the report is rendered
+            } else {
+                // If no cached data, call the existing filterReport logic
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        cachedData = data; // Cache the data
+                        processAndRenderReport(data, selectedGroup, selectedEnvironment, selectedStatus, selectedOwner, selectedManager, selectedSquad);
+                    })
+                    .catch(error => {
+                        console.error("Error loading filtered report:", error);
+                        alert("Failed to load the report. Please try again later.");
+                    })
+                    .finally(() => {
+                        hideSpinner(); // Ensure spinner is hidden regardless of success or failure
+                    });
+            }
+        }
+        function processAndRenderReport(data, selectedGroup, selectedEnvironment, selectedStatus, selectedOwner, selectedManager, selectedSquad) {
+    const filteredApis = [];
+    environmentVcores = {}; // Reset the environment vcore calculation
+
+    data.businessGroups.forEach(group => {
+        if (selectedGroup === "ALL" || group.businessGroup === selectedGroup) {
+            group.environments.forEach(env => {
+                if (selectedEnvironment === "ALL" || env.environment === selectedEnvironment) {
+                    env.apis.forEach(api => {
+                        if ((selectedStatus === "ALL" || api.status === selectedStatus) &&
+                            (selectedOwner === "ALL" || api.ownerName === selectedOwner) &&
+                            (selectedManager === "ALL" || api.managerName === selectedManager) &&
+                            (selectedSquad === "ALL" || api.squad === selectedSquad)) {
+
+                            filteredApis.push({
+                                businessGroup: group.businessGroup,
+                                environment: env.environment,
+                                ...api
+                            });
+
+                            // Include both STARTED and RUNNING in vCore calculation
+                            if (api.status === "STARTED" || api.status === "RUNNING") {
+                                if (!environmentVcores[env.environment]) {
+                                    environmentVcores[env.environment] = 0;
+                                }
+                                environmentVcores[env.environment] += parseFloat(api.sizeOfWorkers);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    allApis = filteredApis;
+    currentPage = 1; // Reset pagination to the first page
+    renderReport(environmentVcores);
+}
+
+    
+        function renderReport(environmentVcores) {
+            const reportContent = document.getElementById("reportContent");
+            const selectedEnvironment = document.getElementById("environment").value;
+            const selectedStatus = document.getElementById("status").value;
+
+            let content = "<div>";
+            let totalVcores = 0;
+            let productionCores = 0;
+
+            const productionEnvironment = Object.keys(environmentVcores).find(env => env.toLowerCase().includes("prod"));
+
+            if (selectedEnvironment === "ALL") {
+                content += "<h3>Total vCores per Environment:</h3><div class='scrollable-table'><table><thead><tr><th>Environment</th><th>vCores</th></tr></thead><tbody>";
+                for (const [env, vcore] of Object.entries(environmentVcores)) {
+                    content += `<tr><td>${env}</td><td>${vcore.toFixed(2)} vCores</td></tr>`;
+                    totalVcores += vcore;
+                    if (env === productionEnvironment) {
+                        productionCores = vcore;
+                    }
+                }
+                content += "</tbody></table></div>";
+
+                const nonProductionCores = totalVcores - productionCores;
+                content += `<h3>vCore Allocation Summary Across Environments:</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>vCores</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Production Cores</td>
+                                        <td>${productionCores.toFixed(2)} vCores</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Non-production Cores</td>
+                                        <td>${nonProductionCores.toFixed(2)} vCores</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total VCores Across All Environments</td>
+                                        <td>${totalVcores.toFixed(2)} vCores</td>
+                                    </tr>
+                                </tbody>
+                            </table>`;
+            } else {
+                const selectedVcores = environmentVcores[selectedEnvironment] || 0;
+                content += `<h3>Total vCores for ${selectedEnvironment}:</h3>`;
+                content += `<p><strong>${selectedEnvironment}:</strong> ${selectedVcores.toFixed(2)} vCores</p>`;
+            }
+
+            const squadCounts = {};
+            const squadEnvironments = {};
+            allApis.forEach(api => {
+                if (api.squad) {
+                    if (!squadCounts[api.squad]) {
+                        squadCounts[api.squad] = 0;
+                        squadEnvironments[api.squad] = {};
+                    }
+                    squadCounts[api.squad]++;
+                    if (!squadEnvironments[api.squad][api.environment]) {
+                        squadEnvironments[api.squad][api.environment] = 0;
+                    }
+                    squadEnvironments[api.squad][api.environment]++;
+                }
+            });
+
+            content += `<h3>Squad Summary:</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Squad Name</th>
+                                    <th>Count</th>
+                                    <th>Environments</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+            for (const [squadName, count] of Object.entries(squadCounts)) {
+                let envDetails = Object.entries(squadEnvironments[squadName])
+                    .map(([env, count]) => `${env}(${count})`)
+                    .join(", ");
+                content += `<tr><td>${squadName}</td><td>${count}</td><td>${envDetails}</td></tr>`;
+            }
+            content += "</tbody></table>";
+
+            const sortedApis = allApis.slice().sort((a, b) => {
+                const groupComparison = a.businessGroup.localeCompare(b.businessGroup);
+                if (groupComparison !== 0) return groupComparison;
+
+                const envComparison = a.environment.localeCompare(b.environment);
+                if (envComparison !== 0) return envComparison;
+
+                return a.api_name.localeCompare(b.api_name);
+            });
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, sortedApis.length);
+            const currentApis = sortedApis.slice(startIndex, endIndex);
+
+            if (currentApis.length > 0) {
+                content += `<div class="table-scroll-wrapper">
+                    <div class="scrollbar">
+                        <div style="width: 1000px;"></div> <!-- Match table width -->
+                    </div>
+                     <div class="scrollbar">
+                    <table id="dataTable">
+                                <thead>
+                                    <tr>
+                            <th style='white-space: nowrap; text-align:center;' onclick="sortTable(0)">Business Group</th>
+                            <th style="white-space: nowrap; text-align:center;" onclick="sortTable(1)">Environment</th>
+                            <th style="white-space: nowrap; text-align:center;" onclick="sortTable(2)">API Name</th>
+                                        <th>Owner Name</th>
+                                        <th>Manager Name</th>
+                                        <th>Target</th>
+                                        <th>Runtime Version</th>
+                                        <th style="white-space: nowrap; text-align:center;" onclick="sortTable(7)">Size of Workers</th>
+                                        <th>Number of Workers</th>
+                                        <th style="white-space: nowrap; text-align:center;" onclick="sortTable(9)">Status</th>
+                                        <th>Squads</th>
+                                        <th>Application Details</th>
+                                        <th>Download Application</th>
+                                    </tr>
+                                </thead>
+                                <tbody><div class="scrollbar">
+                        <div style="width: 1000px;"></div> <!-- Match table width -->
+                    </div>`;
+                currentApis.forEach(api => {
+                    const statusClass = api.status === "STARTED" ? "status-started" : api.status === "UNDEPLOYED" ? "status-undepolyed" : "status-deployed";
+                    content += `<tr>
+                                    <td>${api.businessGroup}</td>
+                                    <td>${api.environment}</td>
+                                    <td>${api.api_name}</td>
+                                    <td>${api.ownerName || 'N/A'}</td>
+                                    <td>${api.managerName || 'N/A'}</td>
+                                    <td>${api.target}</td>
+                                    <td>${api.runtimeVersion}</td>
+                                    <td>${api.sizeOfWorkers}</td>
+                                    <td>${api.numberOfWorkers}</td>
+                                    <td class="${statusClass}">${api.status}</td>
+                                    <td>${api.squad || 'N/A'}</td>
+                                    <td><button onclick="fetchApplicationDetails('${api.environment}', '${api.api_name}')"><i class="fa-solid fa-circle-info"></i></button></td>
+                                    <td><button onclick="downloadApplication('${api.environment}', '${api.api_name}')"><i class="fa-solid fa-download"></i></button></td>
+                                </tr>`;
+                });
+                content += "</tbody></table></div>";
+            } else {
+                content += "<p>No data matches the selected filters.</p>";
+            }
+
+            reportContent.innerHTML = content;
+            renderPagination();
+            document.getElementById("report").style.display = "block";
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = ""; // Clear existing buttons
+
+            const totalPages = Math.ceil(allApis.length / pageSize);
+            if (totalPages <= 1) {
+                pagination.style.display = "none"; // Hide pagination if only one page
+                return;
+            }
+            pagination.style.display = "flex";
+
+            const maxVisibleButtons = 5; // Maximum number of visible page buttons
+            const halfVisible = Math.floor(maxVisibleButtons / 2);
+
+            let startPage = Math.max(currentPage - halfVisible, 1);
+            let endPage = Math.min(currentPage + halfVisible, totalPages);
+
+            if (currentPage <= halfVisible) {
+                endPage = Math.min(maxVisibleButtons, totalPages);
+            } else if (currentPage > totalPages - halfVisible) {
+                startPage = Math.max(totalPages - maxVisibleButtons + 1, 1);
+            }
+
+            // Create "Previous" button
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Previous";
+            prevButton.onclick = () => changePage(currentPage - 1);
+            prevButton.disabled = currentPage === 1; // Disable if on the first page
+            pagination.appendChild(prevButton);
+
+            // Add "First" button and ellipsis if needed
+            if (startPage > 1) {
+                const firstButton = document.createElement("button");
+                firstButton.textContent = "1";
+                firstButton.onclick = () => changePage(1);
+                pagination.appendChild(firstButton);
+
+                if (startPage > 2) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pagination.appendChild(ellipsis);
+                }
+            }
+
+            // Create page number buttons dynamically
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement("button");
+                pageButton.textContent = i;
+                pageButton.onclick = () => changePage(i);
+                pageButton.disabled = currentPage === i; // Highlight current page pageButton.style.fontWeight = currentPage === i ? "bold" : "normal";
+                pagination.appendChild(pageButton);
+            }
+
+            // Add "Last" button and ellipsis if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pagination.appendChild(ellipsis);
+                }
+
+                const lastButton = document.createElement("button");
+                lastButton.textContent = totalPages;
+                lastButton.onclick = () => changePage(totalPages);
+                pagination.appendChild(lastButton);
+            }
+
+            // Create "Next" button
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Next";
+            nextButton.onclick = () => changePage(currentPage + 1);
+            nextButton.disabled = currentPage === totalPages; // Disable if on the last page
+            pagination.appendChild(nextButton);
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(allApis.length / pageSize);
+            if (page < 1 || page > totalPages) return; // Prevent invalid page numbers
+
+            currentPage = page; // Update current page
+            renderReport(environmentVcores); // Re-render report with updated page
+        }
+
+        let filteredApis = []; // To store the filtered results globally
+        let debounceTimeout;
+
+        function searchApplications() {
+            const query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+            if (query.length < 2) {
+                console.log("Please enter at least 2 characters to search.");
+                return;
+            }
+
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                currentPage = 1; // Reset pagination to the first page
+
+                filteredApis = allApis.filter(api => {
+                    return (
+                        api.api_name?.toLowerCase().includes(query) ||
+                        api.ownerName?.toLowerCase().includes(query) ||
+                        api.managerName?.toLowerCase().includes(query) ||
+                        api.status?.toLowerCase().includes(query) ||
+                        api.businessGroup?.toLowerCase().includes(query) ||
+                        api.environment?.toLowerCase().includes(query) ||
+                        api.squad?.toLowerCase().includes(query)
+                    );
+                });
+
+                allApis = filteredApis; // Update global list for pagination
+                renderReport(environmentVcores); // Re-render the report with filtered data
+            }, 500);
+        }
+
+
+        function fetchApplicationDetails(envName, appName) {
+    showSpinner();
+    const applicationDetailsUrl = `${BASE_URL}/api/platform-metrics/runtime-manager/application-details?envName=${encodeURIComponent(envName)}&appName=${encodeURIComponent(appName)}`;
+
+    console.log(`Fetching data from: ${applicationDetailsUrl}`);  // Correct URL
+
+    fetch(applicationDetailsUrl)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const newWindow = window.open('', '_blank', 'width=800,height=600');
+            const detailsContent = `
+                <html>
+                <head>
+                    <title>Application Details: ${appName}</title>
+                    <style>
+                        pre {
+                            font-family: monospace;
+                            white-space: pre-wrap;
+                            word-wrap: break-word;
+                            background-color: #f4f4f4;
+                            padding: 10px;
+                            border-radius: 5px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            width: 100%;
+                            height: 90%;
+                            overflow: auto;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Application Details: ${appName} (${envName})</h1>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </body>
+                </html>
+            `;
+            newWindow.document.write(detailsContent);
+            newWindow.document.close();
+        })
+        .catch(error => {
+            console.error("Error fetching application details:", error);
+            alert("Failed to fetch application details. Please try again later.");
+        })
+        .finally(() => {
+            hideSpinner();
+        });
+}
+
+        function downloadApplication(envName, appName) {
+            const downloadApplicationUrl = `${BASE_URL}/api/platform-metrics/runtime-manager/download-application`;
+            alert("The application is getting downloaded. Please wait...");
+
+            fetch(downloadUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch file: ${response.status}`);
+                    }
+                    return response.blob(); // Convert response to blob
+                })
+                .then(blob => {
+                    const jarFilename = `${appName}_${envName}.jar`; // Dynamic filename
+
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    // Create a link element to trigger the download
+                    const link = document.createElement('a');
+
+                    link.href = blobUrl;
+                    link.download = jarFilename;
+                    document.body.appendChild(link);
+                    link.click(); // Trigger the download
+                    document.body.removeChild(link);
+
+                    // Revoke the object URL to free memory
+                    URL.revokeObjectURL(blobUrl);
+                })
+                .catch(error => {
+                    console.error("Error downloading file:", error);
+                    alert("Failed to download the file. Please try again later.");
+                });
+        }
+
+        let currentSortColumn = null;
+        let isAscending = true;
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("dataTable");
+            if (!table) return;
+
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            // Toggle sort direction if clicking the same column
+            if (currentSortColumn === columnIndex) {
+                isAscending = !isAscending;
+            } else {
+                currentSortColumn = columnIndex;
+                isAscending = true;
+            }
+
+            // Determine if column contains numeric data
+            const headerText = table.rows[0].cells[columnIndex].innerText.trim();
+            const isNumeric = ["vCores", "Size of Workers", "Number of Workers"].some(text => headerText.includes(text));
+
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].innerText.trim();
+                const bVal = b.cells[columnIndex].innerText.trim();
+
+                if (isNumeric) {
+                    return (parseFloat(aVal) - parseFloat(bVal)) * (isAscending ? 1 : -1);
+                } else {
+                    return aVal.localeCompare(bVal) * (isAscending ? 1 : -1);
+                }
+            });
+
+            // Clear and re-append sorted rows
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sorting indicators
+            table.querySelectorAll("th").forEach(th => {
+                th.classList.remove("th-sort-asc", "th-sort-desc");
+                const icon = th.querySelector(".sort-icon");
+                if (icon) icon.remove();
+            });
+
+            const currentTh = table.rows[0].cells[columnIndex];
+            currentTh.classList.add(isAscending ? "th-sort-asc" : "th-sort-desc");
+            const icon = document.createElement("i");
+            icon.className = `fas fa-sort-${isAscending ? "up" : "down"} sort-icon`;
+            currentTh.appendChild(icon);
+        }
+
+        // After rendering the table content
+        const table = document.getElementById("dataTable");
+        if (table) {
+            table.querySelectorAll("th").forEach((headerCell, index) => {
+                headerCell.style.cursor = "pointer";
+                headerCell.addEventListener("click", () => sortTable(index));
+            });
+        }
+
+        function filterReport() {
+            showSpinner();
+            currentPage = 1; // Reset pagination to the first page
+
+            const selectedGroup = document.getElementById("businessGroup").value || "ALL";
+            const selectedEnvironment = document.getElementById("environment").value || "ALL";
+            const selectedStatus = document.getElementById("status").value || "ALL";
+            const selectedSquad = document.getElementById("squadName").value || "ALL"; // Get selected squad
+
+            if (cachedData) {
+                // Process and render the report with cached data
+                processAndRenderReport(cachedData, selectedGroup, selectedEnvironment, selectedStatus, selectedOwner, selectedManager, selectedSquad);
+            } else {
+                // Fetch new data if not cached
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        cachedData = data;
+                        processAndRenderReport(data, selectedGroup, selectedEnvironment, selectedStatus, selectedOwner, selectedManager, selectedSquad);
+                    })
+                    .catch(error => {
+                        console.error("Error loading filtered report:", error);
+                        alert("Failed to load the report. Please try again later.");
+                    })
+                    .finally(() => {
+                        hideSpinner();
+                    });
+            }
+        }
+    </script>
+</body>
+
+</html>
